@@ -55,9 +55,9 @@ export default class BitArray extends DataView {
     return !res;
   }
 
-  at(n){
+  at(i){
   // Fetches the value at the given index
-    return this.getUint8(n / 8) & (1 << (n & 7)) ? 1 : 0;
+    return this.getUint8(i / 8) & (1 << (i & 7)) ? 1 : 0;
   }
 
   clear(){
@@ -78,10 +78,10 @@ export default class BitArray extends DataView {
     for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i,0xffffffff);
   }
 
-  not(){
+  not(inPlace = false){
   // Flips all the bits in this buffer. Example: 1100 = 0011
     let len = this.buffer.byteLength,
-    res = new BitArray(len * 8);
+    res = inPlace ? this : new BitArray(len * 8);
     for (var i = 0; i < len; i += 4) res.setUint32(i,~(this.getUint32(i) >>> 0));
     return res;
   }
@@ -111,9 +111,9 @@ export default class BitArray extends DataView {
     return new BitArray(this.buffer.slice(a, b));
   }
 
-  toggle(n){
+  toggle(i){
 	// Flips the value at the given index
-    this.setUint8(n / 8, this.getUint8(n / 8) ^ (1 << (n & 7)));
+    this.setUint8(i / 8, this.getUint8(i / 8) ^ (1 << (n & 7)));
   }
 
   // For efficiency maps this.buffer to an Uint8Array and byte by byte reverses the rank of bits and stringifies by
