@@ -2,8 +2,8 @@ export default class BitArray extends DataView {
 	constructor(sizeOrBuffer) {
 		let len = 0;
 		if (sizeOrBuffer instanceof ArrayBuffer) {
-			len = sizeOrBuffer.byteLength * 8;
 			super(sizeOrBuffer);
+      len = sizeOrBuffer.byteLength * 8;
 		} else if (Number.isInteger(sizeOrBuffer)) {
 			if (sizeOrBuffer > 0x03ff000000) { throw new Error("BitArray size can not exceed 17163091968"); }
 			super(new ArrayBuffer(Number((BigInt(sizeOrBuffer + 31) & ~31n) >> 3n))); // Sets ArrayBuffer.byteLength to multiples of 4 bytes (32 bits)));
@@ -21,13 +21,13 @@ export default class BitArray extends DataView {
                          );
 	}
 
-	get popcount(){
-		let m1  = 0x55555555;
-		let m2  = 0x33333333;
-		let m4  = 0x0f0f0f0f;
-		let h01 = 0x01010101;
-		let pc  = 0;
-		let x;
+	get popcnt(){
+		let m1  = 0x55555555,
+		    m2  = 0x33333333,
+		    m4  = 0x0f0f0f0f,
+		    h01 = 0x01010101,
+		    pc  = 0,
+		    x;
 
 		for (let i = 0; i < this.buffer.byteLength; i++){
 			 x = this.getUint8(i);
@@ -38,6 +38,14 @@ export default class BitArray extends DataView {
 		}
 		return pc;
 	}
+
+  all(){
+  // Returns true if all bits in the BitArray are set.
+    let len = this.buffer.byteLength,
+        res = true;
+    for (var i = 0; res && i < len; i += 4) res = this.getUint32(i) === 0xffffffff;
+    return res;
+  }
 
   and(bar, inPlace = false){
   // And of this and bar. Example: 1100 & 1001 = 1000
@@ -63,14 +71,6 @@ export default class BitArray extends DataView {
   clear(){
   // Resets the BitArray in place
     for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i,0);
-  }
-
-  every(){
-  // Returns true if all bits in the BitArray are set.
-    let len = this.buffer.byteLength,
-        res = true;
-    for (var i = 0; res && i < len; i += 4) res = this.getUint32(i) === 0xffffffff;
-    return res;
   }
 
   fill(){
