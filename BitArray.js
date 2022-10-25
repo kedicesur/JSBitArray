@@ -29,12 +29,12 @@ export default class BitArray extends DataView {
 		    pc  = 0,
 		    x;
 
-		for (let i = 0; i < this.buffer.byteLength; i++){
-			 x = this.getUint8(i);
+		for (let i = 0; i < this.buffer.byteLength; i += 4)
+			 x = this.getUint32(i);
 			 x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
 			 x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
 			 x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
-			 pc += (x * h01) >> 56;
+			 pc += (x * h01) >> 24;
 		}
 		return pc;
 	}
