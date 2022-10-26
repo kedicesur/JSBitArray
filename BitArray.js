@@ -1,16 +1,21 @@
 export default class BitArray extends DataView {
-	constructor(sizeOrBuffer) {
-		let len = 0;
-		if (sizeOrBuffer instanceof ArrayBuffer) {
-			super(sizeOrBuffer);
+	// deno-lint-ignore constructor-super
+  constructor(sizeOrBuffer) {
+    let len = 0,
+        arr;
+    if (sizeOrBuffer instanceof ArrayBuffer) {
+      if (sizeOrBuffer.byteLength % 4){                                            // If the supplied ArrayBuffer is not a multiple of 4 bytes
+        arr = new Uint8Array(new ArrayBuffer((sizeOrBuffer.byteLength + 3) & ~3)); // Create a TypedArray with smallest byteLength multiple of 4 > sizeOrBuffer.byteLength
+        arr.set(new Uint8Array(sizeOrBuffer));                                     // Fill the TypedArray.buffer with supplied buffer starting from 0
+        sizeOrBuffer = arr.buffer;                                                 // Assign sizeOrBuffer to the obtained ArrayBuffer which is now divisible by 4
+      }
+      super(sizeOrBuffer);
       len = sizeOrBuffer.byteLength * 8;
-		} else if (Number.isInteger(sizeOrBuffer)) {
-			if (sizeOrBuffer > 0x03ff000000) { throw new Error("BitArray size can not exceed 17163091968"); }
-			super(new ArrayBuffer(Number((BigInt(sizeOrBuffer + 31) & ~31n) >> 3n))); // Sets ArrayBuffer.byteLength to multiples of 4 bytes (32 bits)));
-      len = this.buffer.byteLength * 8;
-		} else {
-			throw new Error("An integer size or buffer must be provided when initalizing a BitArray");
-		}
+    } else if (Number.isInteger(sizeOrBuffer)) {
+        if (sizeOrBuffer > 0x03ff000000) throw new Error("BitArray size can not exceed 17163091968");
+        super(new ArrayBuffer(Number((BigInt(sizeOrBuffer + 31) & ~31n) >> 3n))); // Sets ArrayBuffer.byteLength to multiples of 4 bytes (32 bits)));
+        len = this.buffer.byteLength * 8;
+      } else throw new Error("An integer size or viewable buffer must be provided when initalizing a BitArray");
     Object.defineProperty( this
                          , "length"
                          , { configurable: false
@@ -29,7 +34,7 @@ export default class BitArray extends DataView {
 		    pc  = 0,
 		    x;
 
-		for (let i = 0; i < this.buffer.byteLength; i += 4)
+		for (let i = 0; i < this.buffer.byteLength; i += 4){
 			 x = this.getUint32(i);
 			 x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
 			 x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
