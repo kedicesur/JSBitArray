@@ -1,30 +1,29 @@
 export default class BitArray extends DataView {
 	// deno-lint-ignore constructor-super
   constructor(sizeOrBuffer) {
-    let len = 0,
+    let err = e => {throw new Error(e);},
         arr;
-    if (sizeOrBuffer instanceof ArrayBuffer) {
-      if (sizeOrBuffer.byteLength % 4){                                            // If the supplied ArrayBuffer is not a multiple of 4 bytes
-        arr = new Uint8Array(new ArrayBuffer((sizeOrBuffer.byteLength + 3) & ~3)); // Create a TypedArray with smallest byteLength multiple of 4 > sizeOrBuffer.byteLength
-        arr.set(new Uint8Array(sizeOrBuffer));                                     // Fill the TypedArray.buffer with supplied buffer starting from 0
-        sizeOrBuffer = arr.buffer;                                                 // Assign sizeOrBuffer to the obtained ArrayBuffer which is now divisible by 4
-      }
-      super(sizeOrBuffer);
-      len = sizeOrBuffer.byteLength * 8;
-    } else if (Number.isInteger(sizeOrBuffer)) {
-        if (sizeOrBuffer > 0x03ff000000) throw new Error("BitArray size can not exceed 17163091968");
-        super(new ArrayBuffer(Number((BigInt(sizeOrBuffer + 31) & ~31n) >> 3n))); // Sets ArrayBuffer.byteLength to multiples of 4 bytes (32 bits)));
-        len = this.buffer.byteLength * 8;
-      } else throw new Error("An integer size or viewable buffer must be provided when initalizing a BitArray");
+	                                                                                                                                                     // If the supplied ArrayBuffer is not a multiple of 4 bytes then create a
+    sizeOrBuffer instanceof ArrayBuffer ? ( sizeOrBuffer.byteLength % 4 && ( arr = new Uint8Array(new ArrayBuffer((sizeOrBuffer.byteLength + 3) & ~3)) // TypedArray with smallest multiple of 4 byteLength and > sizeOrBuffer.byteLength
+		                                                                       , arr.set(new Uint8Array(sizeOrBuffer))                                     // Fill the obtained TypedArray.buffer with supplied buffer starting from 0
+																		                                       , sizeOrBuffer = arr.buffer.slice()                                         // Assign sizeOrBuffer to a copy of the obtained ArrayBuffer which is now divisible
+	                                                                         )                                                                           // by 4. BitArray.buffer doesn't reference arr.buffer so arr is now available for GC.
+		                                      , super(sizeOrBuffer)
+	                                        )                                                                                                            :
+    Number.isInteger(sizeOrBuffer)      ? ( sizeOrBuffer > 0x03ff000000 && err("BitArray size can not exceed 17163091968")                             // Prevent too large sizes
+		                                      , super(new ArrayBuffer(Number((BigInt(sizeOrBuffer + 31) & ~31n) >> 3n)))                                   // Sets ArrayBuffer.byteLength to multiples of 4 bytes (32 bits)));
+	                                        )                                                                                                            :
+    /* otherwise */                       err("An integer size or viewable buffer must be provided when initalizing a BitArray");
+
     Object.defineProperty( this
                          , "length"
                          , { configurable: false
                            , enumerable  : false
                            , writable    : false
-                           , value       : len
+                           , value       : this.buffer.byteLength * 8
   	                       }
                          );
-	}
+  }
 
 	get popcnt(){
 		let m1  = 0x55555555,
