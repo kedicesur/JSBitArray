@@ -8,7 +8,7 @@ This is a JavaScript class implementation of a BitArray extending [DataView](htt
 
 **Constructor:** *BitArray(sizeOrBuffer)*
 
-* **`sizeOrBuffer`** : Either a pre-existing [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) or a positive integer [`Number`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number). In order to be able to deliver best performance, except for the indexed ones all operators such as `.popcnt`, `.all()`, `.clear()`, `.and()` etc. use 32 bit access to the underlying `ArrayBuffer`. Accordingly the `BitArray.buffer.byteLength` is always set to minimum multiples of 4 that is equal to or greater than the requested integer size. In case `sizeOrBuffer` is of `ArrayBuffer` type and it's `byteLength` is not a multiple of 4 then a new `ArrayBuffer` is generated in minimal correct size and the provided `ArrayBuffer` gets inserted at it's head.
+* **`sizeOrBuffer`** : Either a pre-existing [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) or a positive integer [`Number`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number). In order to be able to deliver best performance, except for the indexed ones all operators such as `.popcnt`, `.all()`, `.clear()`, `.and()` etc. use 32 bit access to the underlying `ArrayBuffer`. Accordingly the `BitArray.buffer.byteLength` is always set to minimum multiples of 4 that is equal to or greater than the requested integer size. In case `sizeOrBuffer` is of `ArrayBuffer` type and it's `byteLength` is not a multiple of 4 then a new `ArrayBuffer` is generated in minimal correct size and the provided `ArrayBuffer` gets pasted at it's head.
 
 ### Syntax
 ```javascript
@@ -30,19 +30,44 @@ a.length;            // 32
 
 ### Properties
 * **`length`**: An immutable property returning the leng of the `BitArray`.
-* **`popcnt`**: Returns the total nummber of 1s in the `BitArray`.
+* **`popcnt`**: Returns the total number of 1s in the `BitArray`.
 ### Methods
 #### Tests
 * **`.all()`**: Returns `true` if all bits in the `BitArray` are set.
+```javascript
+var a = new BitArray(10);
+a.fill();  // 11111111111111111111111111111111
+a.all();   // true
+a.reset(7);// 11111110111111111111111111111111
+a.all();   // false 
+```
 * **`.any()`**: Returns `true` if any of the bits in the `BitArray` are set. If returns `false` then all bits are 0.
+```javascript
+var a = new BitArray(10);
+a.any();   // false
+a.set(7);  // 00000001000000000000000000000000
+a.any();   // true 
+```
 #### Logical Operators
-* **`.and(bar, inPlace = true)`**: And of `this` and `bar`. Example: 1100 & 1001 = 1000. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
+* **`.and(bar, inPlace = false)`**: And of `this` and `bar`. Example: 1100 & 1001 = 1000. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
+```javascript
+var a = new BitArray(10),
+    b = new BitArray(37),
+    c;
+a.set(7);  // 00000001000000000000000000000000
+a.set(8);  // 00000001100000000000000000000000
+b.set(8);  // 0000000010000000000000000000000000000000000000000000000000000000
+
+a.and(b);  // 00000001000000000000000000000000
+b.and(a);  // 0000000100000000000000000000000000000000000000000000000000000000
+```
 * **`.not()`**: Flips all the bits in this buffer. Example: 1100 = 0011.
 * **`.or(bar, inPlace = false)`**: Or of this and bar. Example: 1100 & 1001 = 1101. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
 * **`.xor(bar, inPlace = false)`**: Xor of this and bar. Example: 1100 & 1001 = 0101. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
 #### Modifiers
 * **`.clear()`**: Resets the BitArray in place.
 * **`.fill()`**: Sets the BitArray in place.
+* **`.randomize()`**: Sets or resets every bit in the BitArray randomly in place
 * **`.reset(i)`**: Resets the value at a given index.
 * **`.set(i)`**: Sets the value at a given index.
 * **`.toggle(i)`**: Flips the value at a given index.

@@ -73,7 +73,7 @@ export default class BitArray extends DataView {
   and(bar : BitArray, inPlace = false){
   // And of this and bar. Example: 1100 & 1001 = 1000
     let len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
-        res = inPlace ? this : new BitArray(len * 8);
+        res = inPlace ? this : this.slice();
     for (var i = 0; i < len; i += 4) res.setUint32(i,this.getUint32(i) & bar.getUint32(i));
     return res;
   }
@@ -98,13 +98,13 @@ export default class BitArray extends DataView {
 
   fill(){
   // Sets the BitArray in place
-    for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i,0xffffffff);
+    for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i, 0xffffffff);
   }
 
   not(inPlace = false){
   // Flips all the bits in this buffer. Example: 1100 = 0011
     let len = this.buffer.byteLength,
-    res = inPlace ? this : new BitArray(len * 8);
+    res = inPlace ? this : this.slice();
     for (var i = 0; i < len; i += 4) res.setUint32(i,~(this.getUint32(i) >>> 0));
     return res;
   }
@@ -112,9 +112,14 @@ export default class BitArray extends DataView {
   or(bar : BitArray, inPlace = false){
   // Or of this and bar. Example: 1100 & 1001 = 1101
     let len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
-    res = inPlace ? this : new BitArray(len * 8);
+    res = inPlace ? this : this.slice();
     for (var i = 0; i < len; i += 4) res.setUint32(i,this.getUint32(i) | bar.getUint32(i));
     return res;
+  }
+
+  randomize(){
+  // Sets or resets every bit in the BitArray randomly in place
+    for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i, Math.random() * 0xffffffff);
   }
 
   reset(i : number){
@@ -148,7 +153,7 @@ export default class BitArray extends DataView {
   xor(bar : BitArray, inPlace = false){
 	// Xor of this and bar. Example: 1100 & 1001 = 0101;
     let len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
-    res = inPlace ? this : new BitArray(len * 8);
+    res = inPlace ? this : this.slice();
     for (var i = 0; i < len; i += 4) res.setUint32(i,this.getUint32(i) ^ bar.getUint32(i));
     return res;
   }
