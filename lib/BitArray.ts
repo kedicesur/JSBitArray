@@ -1,12 +1,26 @@
-export default class BitArray extends DataView {
+interface BA extends DataView {
+  readonly length : number;
+  readonly popcnt : number;
+}
+
+export default class BitArray extends DataView implements BA {
+  readonly length : number;
+
+  static isConvertable(x : unknown) : boolean {
+    return x instanceof BitArray || ArrayBuffer.isView(x);
+  }
+
+  static isBitArray(x : unknown) : boolean {
+    return x instanceof BitArray;
+  }
+
+  static from(a : unknown[] | ArrayBufferView) : BA {
+    return Array.isArray(a) ? a.reduce((ba,e,i) => (!!e && ba.set(i), ba), new BitArray(a.length))
+                            : new BitArray (a.buffer);
+  }
 
   constructor(sizeOrBuffer : number | ArrayBuffer) {
-
-  interface BitArray extends DataView { length : number
-                                      , popcnt : number
-                                      }
-
-    let err : (e : string) => void = e => {throw new Error(e);},
+    let err : (e : string) => never = e => {throw new Error(e);},
         arr : Uint8Array,
         buf : ArrayBuffer;
 
@@ -18,8 +32,7 @@ export default class BitArray extends DataView {
        If sizeOrBuffer is a number then prevent it from overshooting a reasonable size and create an ArrayBuffer with a
        minimum byteLength which is a multiples of 4 bytes (32 bits) and > sizeOrBuffer.
 
-       If SizeOrBuffer is neither positive integer nor an ArrayBuffer then throw an error and return a 0 size ArrayBuffer
-       just to make sure that buf is of ArrayBuffer type. It will not get execuleted anyways.
+       If SizeOrBuffer is neither positive integer nor an ArrayBuffer then throw an error.
     */
 
     buf = sizeOrBuffer instanceof ArrayBuffer ? sizeOrBuffer.byteLength % 4 ? ( arr = new Uint8Array(new ArrayBuffer((sizeOrBuffer.byteLength + 3) & ~3))
@@ -30,18 +43,10 @@ export default class BitArray extends DataView {
           Number.isInteger(sizeOrBuffer)      ? ( sizeOrBuffer > 0x03ff000000 && err("BitArray size can not exceed 17163091968")
 		                                            , new ArrayBuffer(Number((BigInt(sizeOrBuffer + 31) & ~31n) >> 3n))
 	                                              )                                                                                :
-          /* otherwise */                       ( err("An integer size or an ArrayBUffer must be provided when initalizing a BitArray") 
-                                                , new ArrayBuffer(0) 
-                                                );
+          /* otherwise */                       err("An integer size or an ArrayBuffer must be provided when initalizing a BitArray");
+    
     super(buf);
-    Object.defineProperty( this
-                         , "length"
-                         , { configurable: false
-                           , enumerable  : false
-                           , writable    : false
-                           , value       : this.buffer.byteLength * 8
-  	                       }
-                         );
+    this.length = this.buffer.byteLength * 8;
   }
 
 	get popcnt(){
@@ -70,7 +75,7 @@ export default class BitArray extends DataView {
     return res;
   }
 
-  and(bar : BitArray, inPlace = false){
+  and(bar : BA, inPlace = false){
   // And of this and bar. Example: 1100 & 1001 = 1000
     let len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
         res = inPlace ? this : this.slice();
@@ -109,7 +114,7 @@ export default class BitArray extends DataView {
     return res;
   }
 
-  or(bar : BitArray, inPlace = false){
+  or(bar : BA, inPlace = false){
   // Or of this and bar. Example: 1100 & 1001 = 1101
     let len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
     res = inPlace ? this : this.slice();
@@ -150,7 +155,7 @@ export default class BitArray extends DataView {
     return new Uint8Array(this.buffer).reduce((p,c) => p + c.toString(2).padStart(8,"0"),"");
   }
 
-  xor(bar : BitArray, inPlace = false){
+  xor(bar : BA, inPlace = false){
 	// Xor of this and bar. Example: 1100 & 1001 = 0101;
     let len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
     res = inPlace ? this : this.slice();

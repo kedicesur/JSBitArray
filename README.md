@@ -28,6 +28,11 @@ console.log(`${a}`); // 10010000000000000000000000000000
 a.length;            // 32
 ```
 
+### Static Methods
+* **`BitArray.from()`**: Converts either an `Array` with `unknown[]` type according to the elements being truthy or falsey or an `ArrayBufferView` type. The `length` of the constructed `BitArray` is adjusted according to the rule mentioned above.
+* **`BitArray.isBitArray()`**: Returns `true` if the provided argument is of `BitArray` type.
+* **`BitArray.isConvertable()`**: Returns `true` if the provided argument is either a `BitArray` or `ArrayBufferView` type.
+
 ### Properties
 * **`length`**: An immutable property returning the leng of the `BitArray`.
 * **`popcnt`**: Returns the total number of 1s in the `BitArray`.
