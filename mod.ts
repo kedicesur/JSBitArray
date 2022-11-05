@@ -1,1 +1,1 @@
-export {default as BA} from "./lib/BitArray.js";
+export {default as BA} from "./lib/BitArray.ts";

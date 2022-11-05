@@ -27,6 +27,21 @@ a.set(3);
 console.log(`${a}`); // 10010000000000000000000000000000
 a.length;            // 32
 ```
+### Converting a BitArray into an Array or TypedArray
+Since `BitARray` is an interable object converting into an `Array` is easily achieved by the spread operator. Conversion into `TypeArrays` is done by the `TypedArray.from(BitArray)` method as follows...
+```javascript
+var a = new BitArray(10),
+    b,
+    c;
+a.set(0);
+a.set(3);
+
+console.log(`${a}`);    // 10010000000000000000000000000000
+a.length;               // 32
+
+b = [...a];             // [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,]
+c = Uint8Array.from(a); // Uint8Array(32) [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, buffer: ArrayBuffer(32), byteLength: 32, byteOffset: 0, length: 32, Symbol(Symbol.toStringTag): 'Uint8Array']
+```
 
 ### Static Methods
 * **`BitArray.from()`**: Converts either an `Array` with `unknown[]` type according to the elements being truthy or falsey or an `ArrayBufferView` type. The `length` of the constructed `BitArray` is adjusted according to the rule mentioned above.
@@ -52,6 +67,14 @@ var a = new BitArray(10);
 a.any();   // false
 a.set(7);  // 00000001000000000000000000000000
 a.any();   // true 
+```
+* **`.isEqual()`**: Returns `true` if tested `BitArray`s have the same bits set.
+```javascript
+var a = new BitArray(10),
+    b;
+a.randomize(); // 10001111001101010101001100111100
+b = a.slice(); // 10001111001101010101001100111100
+a.isEqual(b);  // true 
 ```
 #### Logical Operators
 * **`.and(bar, inPlace = false)`**: And of `this` and `bar`. Example: 1100 & 1001 = 1000. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).

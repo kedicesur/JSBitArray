@@ -71,6 +71,7 @@ export default class BitArray extends DataView implements BA {
   // Returns true if all bits in the BitArray are set.
     let len = this.buffer.byteLength,
         res = true;
+
     for (var i = 0; res && i < len; i += 4) res = this.getUint32(i) === 0xffffffff;
     return res;
   }
@@ -79,6 +80,8 @@ export default class BitArray extends DataView implements BA {
   // And of this and bar. Example: 1100 & 1001 = 1000
     let len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
         res = inPlace ? this : this.slice();
+
+    if (this === bar) return res;
     for (var i = 0; i < len; i += 4) res.setUint32(i,this.getUint32(i) & bar.getUint32(i));
     return res;
   }
@@ -87,6 +90,7 @@ export default class BitArray extends DataView implements BA {
   // Returns true if any of the bits in the BitArray are set. If returns false then all bits are 0
     let len = this.buffer.byteLength,
         res = true;
+
     for (var i = 0; res && i < len; i += 4) res = this.getUint32(i) === 0;
     return !res;
   }
@@ -101,6 +105,15 @@ export default class BitArray extends DataView implements BA {
     for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i,0);
   }
 
+  isEqual(bar : BA){
+    // Checks if two BitArrays have the same bits set
+    let len = this.buffer.byteLength,
+        res = true;
+    if (this === bar) return res;
+    for (var i = 0; res && i < len; i += 4) res = this.getUint32(i) === bar.getUint32(i);
+    return res;
+  }
+
   fill(){
   // Sets the BitArray in place
     for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i, 0xffffffff);
@@ -109,6 +122,7 @@ export default class BitArray extends DataView implements BA {
   not(inPlace = false){
   // Flips all the bits in this buffer. Example: 1100 = 0011
     let len = this.buffer.byteLength,
+
     res = inPlace ? this : this.slice();
     for (var i = 0; i < len; i += 4) res.setUint32(i,~(this.getUint32(i) >>> 0));
     return res;
@@ -118,6 +132,8 @@ export default class BitArray extends DataView implements BA {
   // Or of this and bar. Example: 1100 & 1001 = 1101
     let len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
     res = inPlace ? this : this.slice();
+
+    if (this === bar) return res;
     for (var i = 0; i < len; i += 4) res.setUint32(i,this.getUint32(i) | bar.getUint32(i));
     return res;
   }
@@ -159,7 +175,15 @@ export default class BitArray extends DataView implements BA {
 	// Xor of this and bar. Example: 1100 & 1001 = 0101;
     let len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
     res = inPlace ? this : this.slice();
+
+    if(this === bar) res.clear();
     for (var i = 0; i < len; i += 4) res.setUint32(i,this.getUint32(i) ^ bar.getUint32(i));
     return res;
+  }
+	
+  *[Symbol.iterator](){
+     let i = 0,
+         l = this.length;
+     while (i < l) yield this.at(i++);
   }
 }
