@@ -1,10 +1,12 @@
 interface BA extends DataView {
   readonly length : number;
   readonly popcnt : number;
+  readonly size   : number;
 }
 
 export default class BitArray extends DataView implements BA {
   readonly length : number;
+  readonly size   : number;
 
   static isConvertable(x : unknown) : boolean {
     return x instanceof BitArray || ArrayBuffer.isView(x);
@@ -22,7 +24,8 @@ export default class BitArray extends DataView implements BA {
   constructor(sizeOrBuffer : number | ArrayBuffer) {
     let err : (e : string) => never = e => {throw new Error(e);},
         arr : Uint8Array,
-        buf : ArrayBuffer;
+        buf : ArrayBuffer,
+        siz = 0;
 
     /* If sizeOrBuffer is an ArrayBuffer with length which is not a multiple of 4 bytes then create a new TypedArray
        with correct ArrayBuffer.length which is > sizeOrBuffer.byteLength. Fill the obtained TypedArray.buffer with 
@@ -35,18 +38,22 @@ export default class BitArray extends DataView implements BA {
        If SizeOrBuffer is neither positive integer nor an ArrayBuffer then throw an error.
     */
 
-    buf = sizeOrBuffer instanceof ArrayBuffer ? sizeOrBuffer.byteLength % 4 ? ( arr = new Uint8Array(new ArrayBuffer((sizeOrBuffer.byteLength + 3) & ~3))
-		                                                                          , arr.set(new Uint8Array(sizeOrBuffer))
-																		                                          , arr.buffer.slice(0)
-	                                                                            )
-                                                                            : sizeOrBuffer                                       :
-          Number.isInteger(sizeOrBuffer)      ? ( sizeOrBuffer > 0x03ff000000 && err("BitArray size can not exceed 17163091968")
-		                                            , new ArrayBuffer(Number((BigInt(sizeOrBuffer + 31) & ~31n) >> 3n))
-	                                              )                                                                                :
+    buf = sizeOrBuffer instanceof ArrayBuffer ? ( siz = sizeOrBuffer.byteLength * 8
+                                                , sizeOrBuffer.byteLength % 4 ? ( arr = new Uint8Array(new ArrayBuffer((sizeOrBuffer.byteLength + 3) & ~3))
+		                                                                            , arr.set(new Uint8Array(sizeOrBuffer))
+																		                                            , arr.buffer.slice(0)
+	                                                                              )
+                                                                              : sizeOrBuffer
+                                                ) :
+          Number.isInteger(sizeOrBuffer)      ? ( siz = sizeOrBuffer 
+                                                , siz > 0x03ff000000 && err("BitArray size can not exceed 17163091968")
+		                                            , new ArrayBuffer(Number((BigInt(siz + 31) & ~31n) >> 3n))
+	                                              ) :
           /* otherwise */                       err("An integer size or an ArrayBuffer must be provided when initalizing a BitArray");
     
     super(buf);
     this.length = this.buffer.byteLength * 8;
+    this.size   = siz;
   }
 
 	get popcnt(){
@@ -183,7 +190,7 @@ export default class BitArray extends DataView implements BA {
 	
   *[Symbol.iterator](){
      let i = 0,
-         l = this.length;
+         l = this.size;
      while (i < l) yield this.at(i++);
   }
 }
