@@ -79,17 +79,17 @@ export default class BitArray extends DataView implements BA {
     let len = this.buffer.byteLength,
         res = true;
 
-    for (var i = 0; res && i < len; i += 4) res = this.getUint32(i) === 0xffffffff;
+    for (let i = 0; res && i < len; i += 4) res = this.getUint32(i) === 0xffffffff;
     return res;
   }
 
   and(bar : BA, inPlace = false){
   // And of this and bar. Example: 1100 & 1001 = 1000
-    let len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
-        res = inPlace ? this : this.slice();
+    const len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
+          res = inPlace ? this : this.slice();
 
     if (this === bar) return res;
-    for (var i = 0; i < len; i += 4) res.setUint32(i,this.getUint32(i) & bar.getUint32(i));
+    for (let i = 0; i < len; i += 4) res.setUint32(i,this.getUint32(i) & bar.getUint32(i));
     return res;
   }
 
@@ -98,13 +98,13 @@ export default class BitArray extends DataView implements BA {
     let len = this.buffer.byteLength,
         res = true;
 
-    for (var i = 0; res && i < len; i += 4) res = this.getUint32(i) === 0;
+    for (let i = 0; res && i < len; i += 4) res = this.getUint32(i) === 0;
     return !res;
   }
 
   at(i : number){
   // Fetches the value at the given index
-    return this.getUint8(~~(i / 8)) & (128 >> (i & 7)) ? 1 : 0;
+    return this.getUint8((i / 8) >>> 3) & (128 >> (i & 7)) ? 1 : 0;
   }
 
   clear(){
@@ -117,7 +117,7 @@ export default class BitArray extends DataView implements BA {
     let len = this.buffer.byteLength,
         res = true;
     if (this === bar) return res;
-    for (var i = 0; res && i < len; i += 4) res = this.getUint32(i) === bar.getUint32(i);
+    for (let i = 0; res && i < len; i += 4) res = this.getUint32(i) === bar.getUint32(i);
     return res;
   }
 
@@ -128,20 +128,18 @@ export default class BitArray extends DataView implements BA {
 
   not(inPlace = false){
   // Flips all the bits in this buffer. Example: 1100 = 0011
-    let len = this.buffer.byteLength,
-
-    res = inPlace ? this : this.slice();
-    for (var i = 0; i < len; i += 4) res.setUint32(i,~(this.getUint32(i) >>> 0));
+    const len = this.buffer.byteLength,
+          res = inPlace ? this : this.slice();
+    for (let i = 0; i < len; i += 4) res.setUint32(i,~(this.getUint32(i) >>> 0));
     return res;
   }
 
   or(bar : BA, inPlace = false){
   // Or of this and bar. Example: 1100 & 1001 = 1101
-    let len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
-    res = inPlace ? this : this.slice();
-
+    const len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
+          res = inPlace ? this : this.slice();
     if (this === bar) return res;
-    for (var i = 0; i < len; i += 4) res.setUint32(i,this.getUint32(i) | bar.getUint32(i));
+    for (let i = 0; i < len; i += 4) res.setUint32(i,this.getUint32(i) | bar.getUint32(i));
     return res;
   }
 
@@ -152,12 +150,14 @@ export default class BitArray extends DataView implements BA {
 
   reset(i : number){
 	// Resets the value at the given index.
-    this.setUint8(~~(i / 8), this.getUint8(~~(i / 8)) & ~(128 >> (i & 7)));
+    const j = (i / 8) >>> 3;
+    this.setUint8(j, this.getUint8(j) & ~(128 >> (i & 7)));
   }
 
   set(i : number){
 	// Sets the value at the given index.
-    this.setUint8(~~(i / 8), this.getUint8(~~(i / 8)) | (128 >> (i & 7)));
+    const j = (i / 8) >>> 3;
+    this.setUint8(j, this.getUint8(j) | (128 >> (i & 7)));
   }
 
   slice(a = 0, b = this.buffer.byteLength){
@@ -169,7 +169,8 @@ export default class BitArray extends DataView implements BA {
 
   toggle(i : number){
 	// Flips the value at the given index
-    this.setUint8(~~(i / 8), this.getUint8(~~(i / 8)) ^ (128 >> (i & 7)));
+    const j = (i / 8) >>> 3;
+    this.setUint8(j, this.getUint8(j) ^ (128 >> (i & 7)));
   }
 
   // For efficiency maps this.buffer to an Uint8Array and byte by byte reverses the rank of bits and stringifies by
@@ -180,11 +181,11 @@ export default class BitArray extends DataView implements BA {
 
   xor(bar : BA, inPlace = false){
 	// Xor of this and bar. Example: 1100 & 1001 = 0101;
-    let len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
-    res = inPlace ? this : this.slice();
+    const len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
+          res = inPlace ? this : this.slice();
 
     if(this === bar) res.clear();
-    for (var i = 0; i < len; i += 4) res.setUint32(i,this.getUint32(i) ^ bar.getUint32(i));
+    for (let i = 0; i < len; i += 4) res.setUint32(i,this.getUint32(i) ^ bar.getUint32(i));
     return res;
   }
 	
