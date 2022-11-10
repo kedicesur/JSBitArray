@@ -16,7 +16,7 @@ export default class BitArray extends DataView implements BA {
     return x instanceof BitArray;
   }
 
-  static from(a : unknown[] | ArrayBufferView) : BA {
+  static from(a : unknown[] | ArrayBufferView) : BitArray {
     return Array.isArray(a) ? a.reduce((ba,e,i) => (!!e && ba.set(i), ba), new BitArray(a.length))
                             : new BitArray (a.buffer);
   }
@@ -40,15 +40,15 @@ export default class BitArray extends DataView implements BA {
 
     buf = sizeOrBuffer instanceof ArrayBuffer ? ( siz = sizeOrBuffer.byteLength * 8
                                                 , sizeOrBuffer.byteLength % 4 ? ( arr = new Uint8Array(new ArrayBuffer((sizeOrBuffer.byteLength + 3) & ~3))
-		                                                                            , arr.set(new Uint8Array(sizeOrBuffer))
-																		                                            , arr.buffer.slice(0)
-	                                                                              )
+		                                                                , arr.set(new Uint8Array(sizeOrBuffer))
+										, arr.buffer.slice(0)
+	                                                                        )
                                                                               : sizeOrBuffer
                                                 ) :
           Number.isInteger(sizeOrBuffer)      ? ( siz = sizeOrBuffer
                                                 , siz > 0x07ffffffe0 && err("BitArray size can not exceed 34359738336")
-		                                            , new ArrayBuffer(Number((BigInt(siz + 31) & ~31n) >> 3n))
-	                                              ) :
+		                                , new ArrayBuffer(Number((BigInt(siz + 31) & ~31n) >> 3n))
+	                                        ) :
           /* otherwise */                       err("An integer size or an ArrayBuffer must be provided when initalizing a BitArray");
     
     super(buf);
@@ -74,7 +74,7 @@ export default class BitArray extends DataView implements BA {
 		return pc;
 	}
 
-  all(){
+  all() : boolean {
   // Returns true if all bits in the BitArray are set.
     let len = this.buffer.byteLength,
         res = true;
@@ -83,7 +83,7 @@ export default class BitArray extends DataView implements BA {
     return res;
   }
 
-  and(bar : BA, inPlace = false){
+  and(bar : BitArray, inPlace = false) : BitArray {
   // And of this and bar. Example: 1100 & 1001 = 1000
     const len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
           res = inPlace ? this : this.slice();
@@ -93,7 +93,7 @@ export default class BitArray extends DataView implements BA {
     return res;
   }
 
-  any(){
+  any() : boolean {
   // Returns true if any of the bits in the BitArray are set. If returns false then all bits are 0
     let len = this.buffer.byteLength,
         res = true;
@@ -102,19 +102,19 @@ export default class BitArray extends DataView implements BA {
     return !res;
   }
 
-  at(i : number){
+  at(i : number) : number {
   // Fetches the value at the given index
     return this.getUint8((i / 8) >>> 0) & (128 >> (i & 7)) ? 1 : 0;
   }
 
-  clear(){
+  clear() : BitArray {
   // Resets the BitArray in place
     for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i,0);
     return this;
   }
 
-  isEqual(bar : BA){
-    // Checks if two BitArrays have the same bits set
+  isEqual(bar : BitArray) : boolean {
+  // Checks if two BitArrays have the same bits set
     let len = this.buffer.byteLength,
         res = true;
     if (this === bar) return res;
@@ -122,13 +122,13 @@ export default class BitArray extends DataView implements BA {
     return res;
   }
 
-  fill(){
+  fill() : BitArray {
   // Sets the BitArray in place
     for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i, 0xffffffff);
     return this;
   }
 
-  not(inPlace = false){
+  not(inPlace = false) : BitArray {
   // Flips all the bits in this buffer. Example: 1100 = 0011
     const len = this.buffer.byteLength,
           res = inPlace ? this : this.slice();
@@ -136,7 +136,7 @@ export default class BitArray extends DataView implements BA {
     return res;
   }
 
-  or(bar : BA, inPlace = false){
+  or(bar : BitArray, inPlace = false){
   // Or of this and bar. Example: 1100 & 1001 = 1101
     const len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
           res = inPlace ? this : this.slice();
@@ -145,48 +145,48 @@ export default class BitArray extends DataView implements BA {
     return res;
   }
 
-  randomize(){
+  randomize() : BitArray{
   // Sets or resets every bit in the BitArray randomly in place
     for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i, Math.random() * 0xffffffff);
     return this;
   }
 
-  reset(i : number){
-	// Resets the value at the given index.
+  reset(i : number) : BitArray{
+  // Resets the value at the given index.
     const j = (i / 8) >>> 0;
     this.setUint8(j, this.getUint8(j) & ~(128 >> (i & 7)));
     return this;
   }
 
-  set(i : number){
-	// Sets the value at the given index.
+  set(i : number) : BitArray{
+  // Sets the value at the given index.
     const j = (i / 8) >>> 0;
     this.setUint8(j, this.getUint8(j) | (128 >> (i & 7)));
     return this;
   }
 
-  slice(a = 0, b = this.buffer.byteLength){
+  slice(a = 0, b = this.buffer.byteLength) : BitArray{
   // Slices BitArray and returns a new BitArray with buffer byteLength in multiples of 4 bytes (32 bits)
   // The default argument values instantiate a clone.
     b = a + Number((BigInt(b - a + 31) & ~31n));
     return new BitArray(this.buffer.slice(a, b));
   }
 
-  toggle(i : number){
-	// Flips the value at the given index
+  toggle(i : number) : BitArray{
+  // Flips the value at the given index
     const j = (i / 8) >>> 0;
     this.setUint8(j, this.getUint8(j) ^ (128 >> (i & 7)));
     return this;
   }
 
-  // For efficiency maps this.buffer to an Uint8Array and byte by byte reverses the rank of bits and stringifies by
-  // reducing. However stringifying a huge BitArray is meaningless. Perhaps limiting the string size to 128 is reasonable.
-  toString(){
+  // For efficiency maps this.buffer to an Uint8Array and byte by byte by reducing.
+  // However stringifying a huge BitArray is meaningless. Perhaps limiting the string size to 128 is reasonable.
+  toString() : string {
     return new Uint8Array(this.buffer).reduce((p,c) => p + c.toString(2).padStart(8,"0"),"");
   }
 
-  xor(bar : BA, inPlace = false){
-	// Xor of this and bar. Example: 1100 & 1001 = 0101;
+  xor(bar : BitArray, inPlace = false) : BitArray {
+  // Xor of this and bar. Example: 1100 & 1001 = 0101;
     const len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
           res = inPlace ? this : this.slice();
 
@@ -195,7 +195,7 @@ export default class BitArray extends DataView implements BA {
     return res;
   }
 	
-  *[Symbol.iterator](){
+  *[Symbol.iterator]() : Generator<number> {
      let i = 0,
          l = this.size;
      while (i < l) yield this.at(i++);

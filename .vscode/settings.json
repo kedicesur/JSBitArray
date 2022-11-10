@@ -1,0 +1,17 @@
+{
+    "workbench.colorTheme": "Monokai",
+    "workbench.preferredHighContrastColorTheme": "Default High Contrast",
+    "workbench.editor.decorations.colors": true,
+    "workbench.iconTheme": "vs-seti",
+    "workbench.preferredDarkColorTheme": "Monokai Dimmed",
+    "editor.fontFamily": "'Hasklig', 'Droid Sans Mono', 'monospace', monospace",
+    "editor.fontLigatures": true,
+    "editor.fontSize": 12,
+    "editor.autoIndent": "advanced",
+    "editor.guides.highlightActiveIndentation": true,
+    "editor.guides.indentation": false,
+    "editor.tabSize": 8,
+"editor.detectIndentation": false,
+"deno.inlayHints.variableTypes.suppressWhenTypeMatchesName": false,
+"deno.unstable": true
+}
