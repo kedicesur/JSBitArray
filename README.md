@@ -118,3 +118,31 @@ c = Uint8Array.from(a); // Uint8Array(32) [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 ```
 ### **Using DataView Access**
 Since `BitArray` is just an extension of the `DataView` object, all of it's methods are inherited and at your service for free. However remember that, while reading or manipulating a `BitArray`'s `ArrayBuffer` through the inherited methods you should use byte indexed access.
+
+
+### **Benchmarks**
+
+We bench a meaningful usecase of `BitArray` employed in an Optimized Segmented Sieve of Sundaram based single threaded `PI` function which returns the count of prime numbers up to a number `n`. Tests are run for `0` to different `n` values from 1000 to 1,000,000,000 both for `Array`, `BitArray` and `Uint8Array`. Benchmarking is done by Deno's built in benchmarking tool. So just run
+
+**`/path-to-project$`** `deno bench --unstable`
+
+at the root of the project to see it for yourself.
+
+N| Array (ms) | Uint8Array (ms) | BitArray (ms)
+-|-------|------------|---------
+1000 | 0.0046 | 0.00476 | 0.00422
+10000 | 0.04627 | 0.04201 | 0.03537
+100000 | 0.5577 | 0.50201 | 0.45837
+1000000 | 6.71 | 6.29 | 6.22
+10000000 | 66.81 | 60.24 | 59.61
+100000000 | 937.57 | 650.42 | 680.7
+1000000000 | 10540 | 7430 | 7920
+
+![Benchmark ms/iter](./images/Bench.png)
+
+Keep in mind that both axis are in logaritmic scale. Although the length of the bars seems to be close, `Array` performs  very bad especially when the size exceeds 33,554,433 limit (> 2²⁵) at which point `Array` reaches to ~268MB memory limit and it's internal structure gets switched to `NumberDictionary[16]` yielding a dramatic slowdown of the V8 engine. `BitArray` and `Uint8Array` don't get effected from this phenomenon. In fact `BitArray` should be using only ~4MB of memory at this point.
+
+As seen from the above data and chart `BitArray` is faster or in par with `Uint8Array`. Besides we have to remember that `BitArray` has 1/8 of the memory footprint of an `Uint8Array`.
+
+### **TODO**
+* With hopes to improve the performance of `BitArray` further, in the upcoming version I plan to include a WASM module to kick in after a certain size.

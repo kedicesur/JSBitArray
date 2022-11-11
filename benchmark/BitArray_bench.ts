@@ -6,19 +6,19 @@ let s = 0,
     e = 1e6,
     r = 0;
 
-Deno.bench( "Array"
+Deno.bench( `Array     : ${s}-${e}`
           , function(){
               r = piArr(s, e);
             }
           );
 
-Deno.bench( "BitArray"
+Deno.bench( `BitArray  : ${s}-${e}`
           , function(){
               r = piBar(s, e);
             }
           );
 
-Deno.bench( "Uint8Array"
+Deno.bench( `Uint8Array: ${s}-${e}`
           , function(){
               r = piUia(s, e);
             }

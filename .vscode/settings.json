@@ -13,5 +13,6 @@
     "editor.tabSize": 8,
 "editor.detectIndentation": false,
 "deno.inlayHints.variableTypes.suppressWhenTypeMatchesName": false,
-"deno.unstable": true
+"deno.unstable": true,
+"files.autoSave": "afterDelay"
 }
