@@ -56,23 +56,22 @@ export default class BitArray extends DataView implements BA {
     this.size   = siz;
   }
 
-	get popcnt() : number {
-		let m1  = 0x55555555,
-		    m2  = 0x33333333,
-		    m4  = 0x0f0f0f0f,
-		    h01 = 0x01010101,
-		    pc  = 0,
-		    x;
-
-		for (let i = 0; i < this.buffer.byteLength; i += 4){
-			 x = this.getUint32(i);
-			 x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
-			 x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
-			 x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
-			 pc += (x * h01) >> 24;
-		}
-		return pc;
-	}
+  get popcnt() : number {
+    let m1  = 0x55555555,
+        m2  = 0x33333333,
+        m4  = 0x0f0f0f0f,
+        h01 = 0x01010101,
+        pc  = 0,
+        x;
+    for (let i = 0; i < this.buffer.byteLength; i += 4){
+      x = this.getUint32(i);
+      x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
+      x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
+      x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
+      pc += (x * h01) >> 24;
+    }
+  return pc;
+  }
 
   all() : boolean {
   // Returns true if all bits in the BitArray are set.

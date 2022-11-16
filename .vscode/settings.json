@@ -10,9 +10,12 @@
     "editor.autoIndent": "advanced",
     "editor.guides.highlightActiveIndentation": true,
     "editor.guides.indentation": false,
-    "editor.tabSize": 8,
+    "editor.tabSize": 2,
 "editor.detectIndentation": false,
 "deno.inlayHints.variableTypes.suppressWhenTypeMatchesName": false,
 "deno.unstable": true,
-"files.autoSave": "afterDelay"
+"files.autoSave": "afterDelay",
+"editor.cursorBlinking": "smooth",
+"editor.minimap.enabled": false,
+"deno.enable": true
 }

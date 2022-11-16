@@ -16,6 +16,7 @@ This is a JavaScript class implementation of a BitArray extending [DataView](htt
 * **`sizeOrBuffer`**: Either a pre-existing [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) or a positive integer [`Number`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number). In order to be able to deliver best performance, except for the indexed ones all properties or methods such as `.popcnt`, `.all()`, `.clear()`, `.and()` etc. use 32 bit access to the underlying `ArrayBuffer`. Accordingly the `BitArray.buffer.byteLength` is always set to minimum multiples of 4 that is equal to or greater than the requested integer size. In case `sizeOrBuffer` is of `ArrayBuffer` type and it's `byteLength` is not a multiple of 4 then a new `ArrayBuffer` is generated in minimal correct size and the provided `ArrayBuffer` gets copied at it's head. In theory `BitArray` should allow sizes up to 34,359,738,336 (`0x07ffffffe0`).
 
 ### **Syntax**
+
 ```javascript
 new BitArray(buffer);
 new BitArray(number);
@@ -24,6 +25,7 @@ new BitArray(number);
 ### **Examples**
 
 Starting with something simple...
+
 ```javascript
 var a = new BitArray(10);
 a.set(0);
@@ -47,6 +49,7 @@ a.popcnt;            // 2
 ### **Methods**
 #### Tests
 * **`.all()`**: Returns `true` if all bits in the `BitArray` are set.
+
 ```javascript
 var a = new BitArray(10);
 a.fill();  // 11111111111111111111111111111111
@@ -54,14 +57,18 @@ a.all();   // true
 a.reset(7);// 11111110111111111111111111111111
 a.all();   // false 
 ```
+
 * **`.any()`**: Returns `true` if any of the bits in the `BitArray` are set. If returns `false` then all bits are 0.
+
 ```javascript
 var a = new BitArray(10);
 a.any();   // false
 a.set(7);  // 00000001000000000000000000000000
 a.any();   // true 
 ```
+
 * **`.isEqual()`**: Returns `true` if tested `BitArray`s have the same bits set.
+
 ```javascript
 var a = new BitArray(10),
     b;
@@ -69,8 +76,10 @@ a.randomize(); // 10001111001101010101001100111100
 b = a.slice(); // 10001111001101010101001100111100
 a.isEqual(b);  // true 
 ```
+
 #### Logical Operators
 * **`.and(bar, inPlace = false)`**: And of `this` and `bar`. Example: 1100 & 1001 = 1000. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
+
 ```javascript
 var a = new BitArray(10),
     b = new BitArray(37),
@@ -88,6 +97,7 @@ b.set(8);  // 0000000010000000000000000000000000000000000000000000000000000000
 a.and(b);  // 00000001000000000000000000000000
 b.and(a);  // 0000000100000000000000000000000000000000000000000000000000000000
 ```
+
 * **`.not(inPlace = false)`**: Flips all the bits in this buffer. Example: 1100 = 0011. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
 * **`.or(bar, inPlace = false)`**: Or of this and bar. Example: 1100 & 1001 = 1101. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
 * **`.xor(bar, inPlace = false)`**: Xor of this and bar. Example: 1100 & 1001 = 0101. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
@@ -103,6 +113,7 @@ b.and(a);  // 0000000100000000000000000000000000000000000000000000000000000000
 * **`.toString()`**: Returns the string representation of the `BitArray`.
 ### **Converting from a BitArray into an Array or TypedArray**
 Since `BitArray` is an iterable object, converting it into an `Array` is easily achieved by the spread operator. Conversion into `TypeArrays` is done by the `TypedArray.from(BitArray)` method as follows...
+
 ```javascript
 var a = new BitArray(10),
     b,
@@ -116,6 +127,7 @@ a.length;               // 32
 b = [...a];             // [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,]
 c = Uint8Array.from(a); // Uint8Array(32) [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, buffer: ArrayBuffer(32), byteLength: 32, byteOffset: 0, length: 32, Symbol(Symbol.toStringTag): 'Uint8Array']
 ```
+
 ### **Using DataView Access**
 Since `BitArray` is just an extension of the `DataView` object, all of it's methods are inherited and at your service for free. However remember that, while reading or manipulating a `BitArray`'s `ArrayBuffer` through the inherited methods you should use byte indexed access.
 
