@@ -3,7 +3,9 @@
 <head>
 <script type="module">
 import * as BA_WASM from "./build/release.js";
-document.body.innerText = BA_WASM.new_BitArray(10).toString();
+var ba = BA_WASM.new_BitArray(8589934400);
+BA_WASM.randomize(ba);
+document.getElementsByTagName("body")[0].textContent = `Population count is ${BA_WASM.popcount(ba)}`; // and the string representation of the BitArray is ${BA_WASM.toString(ba)}
 </script>
 </head>
 <body></body>
