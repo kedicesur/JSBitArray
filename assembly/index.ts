@@ -67,9 +67,9 @@ class BitArray extends DataView {
     return !res;
   }
   
-  at(i : u32) : u32 {
+  at(i : u64) : u8 {
   // Fetches the value at the given index
-    return this.getUint8((i / 8) >>> 0) & (128 >> (<u8>i & 7)) ? 1 : 0;
+    return this.getUint8(<i32>(i >> 3)) & (128 >> <i8>(i & 7)) ? 1 : 0;
   }
 
   isEqual(bar : BitArray) : boolean {
@@ -129,17 +129,17 @@ class BitArray extends DataView {
     return this;
   }
 
-  reset(i : u32) : BitArray{
+  reset(i : u64) : BitArray{
   // Resets the value at the given index.
-    const j = (i / 8) >>> 0;
+    const j = <i32>(i >> 3);
     this.setUint8(j, this.getUint8(j) & ~(128 >> (<u8>i & 7)));
     return this;
   }
 
-  set(i : u32) : BitArray{
+  set(i : f64) : BitArray{
   // Sets the value at the given index.
-    const j = (i / 8) >>> 0;
-    this.setUint8(j, this.getUint8(j) | (128 >> (<u8>i & 7)));
+    const j = <i32>(i / 8);
+    this.setUint8(j, this.getUint8(j) | (128 >> (<i8>i & 7)));
     return this;
   }
 
@@ -151,9 +151,9 @@ class BitArray extends DataView {
     return new BitArray(false, this.buffer.slice(a, b));
   }
 
-  toggle(i : u32) : BitArray{
+  toggle(i : u64) : BitArray{
   // Flips the value at the given index
-    const j = (i / 8) >>> 0;
+    const j = <i32>(i >> 3);
     this.setUint8(j, this.getUint8(j) ^ (128 >> (<u8>i & 7)));
     return this;
   }
@@ -183,7 +183,7 @@ class BitArray extends DataView {
     if (mod && mod !== 4) throw new TypeError("Invalid BitArray.buffer.byteLength");
     len -= mod;  
     if (len) for (; idx < len; idx += 8) this.setUint64(idx, val);
-    if (mod) this.setUint32(idx,<u32>val)
+    if (mod) this.setUint32(idx, <u32>val)
     return this;
   }
 
@@ -201,14 +201,9 @@ class BitArray extends DataView {
     if (mod) res.setUint32(idx, this.getUint32(idx) ^ bar.getUint32(idx))
     return res;
   }
-/*
-  *[Symbol.iterator]() : Generator<number> {
-     let i = 0,
-         l = this.size;
-     while (i < l) yield this.at(i++);
-  }
-*/
 }
+
+// Exposed interface functions
 
 export function from_ArrayBuffer(ab : ArrayBuffer) : BitArray {
   const xs = (ab.byteLength + 3) & 0xfffffffc,
@@ -218,11 +213,10 @@ export function from_ArrayBuffer(ab : ArrayBuffer) : BitArray {
   return new BitArray(sz,ab);
 }
 
-export function new_BitArray(n : u64) : BitArray {
-  const limit : u64      = <u64>OBJECT_MAXSIZE * 8 - 32,
-        byteLength : u32 = <u32>(((<u64>n + 31) & <u64>0x1ffffffe0) >> 3);
+export function new_BitArray(n : f64) : BitArray {
+  const byteLength : u32 = <u32>(((<u64>n + 31) & <u64>0x1ffffffe0) >> 3);
 
-  if (n > limit ) throw new RangeError(`Maximum allowed BitArray size is ${limit}`);
+  if (n > <f64>OBJECT_MAXSIZE * 8 - 32) throw new RangeError(`Maximum allowed BitArray size is ${OBJECT_MAXSIZE * 8 - 32}`);
   return new BitArray(<u64>n, new ArrayBuffer(byteLength)); // new ArrayBuffer(<u32>Math.ceil(<f32>n/32)*4)
 }
 
@@ -238,12 +232,16 @@ export function any(target : BitArray) : boolean {
   return target.any();
 }
 
-export function at(target : BitArray, i : u32) : u32 {
-  return target.at(i);
+export function at(target : BitArray, i : f64) : u8 {
+  return target.at(<u64>i);
 }
 
 export function isEqual(target : BitArray, source : BitArray) : boolean {
   return target.isEqual(source);
+}
+
+export function length(target : BitArray) : f64 {
+  return target.length as f64;
 }
 
 export function not(target : BitArray, inPlace : boolean) : BitArray {
@@ -254,35 +252,39 @@ export function or(target : BitArray, source : BitArray, inPlace : boolean) : Bi
   return target.or(source,inPlace);
 }
 
-export function popcount(target : BitArray) : u64 {
-  return target.popcnt;
+export function popcount(target : BitArray) : f64 {
+  return target.popcnt as f64;
 }
 
 export function randomize(target : BitArray) : BitArray {
   return target.randomize();
 }
 
-export function reset(Target : BitArray, i : u32) : BitArray {
-  return Target.reset(i);
+export function reset(Target : BitArray, i : f64) : BitArray {
+  return Target.reset(<u64>i);
 }
 
-export function set(Target : BitArray, i : u32) : BitArray {
+export function set(Target : BitArray, i : f64) : BitArray {
   return Target.set(i);
+}
+
+export function size(target : BitArray) : f64 {
+  return target.size as f64;
 }
 
 export function slice(target : BitArray, a : u32, b : u32) : BitArray {
   return target.slice(a,b);
 }
 
-export function toggle(Target : BitArray, i : u32) : BitArray {
-  return Target.toggle(i);
+export function toggle(Target : BitArray, i : f64) : BitArray {
+  return Target.toggle(<u64>i);
 }
 
 export function toString(target : BitArray) : string {
   return target.toString();
 }
 
-export function wipe(target : BitArray, b : boolean = 0) : BitArray {
+export function wipe(target : BitArray, b : boolean = false) : BitArray {
   return target.wipe(b);
 }
 

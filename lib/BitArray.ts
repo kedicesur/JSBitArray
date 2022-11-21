@@ -40,15 +40,15 @@ export default class BitArray extends DataView implements BA {
 
     buf = sizeOrBuffer instanceof ArrayBuffer ? ( siz = sizeOrBuffer.byteLength * 8
                                                 , sizeOrBuffer.byteLength % 4 ? ( arr = new Uint8Array(new ArrayBuffer((sizeOrBuffer.byteLength + 3) & ~3))
-		                                                                , arr.set(new Uint8Array(sizeOrBuffer))
-										, arr.buffer.slice(0)
-	                                                                        )
+                                                                                , arr.set(new Uint8Array(sizeOrBuffer))
+										                                                            , arr.buffer.slice(0)
+                                                                                )
                                                                               : sizeOrBuffer
                                                 ) :
           Number.isInteger(sizeOrBuffer)      ? ( siz = sizeOrBuffer
                                                 , siz > 0x07ffffffe0 && err("BitArray size can not exceed 34359738336")
-		                                , new ArrayBuffer(Number((BigInt(siz + 31) & ~31n) >> 3n))
-	                                        ) :
+		                                            , new ArrayBuffer(Number((BigInt(siz + 31) & ~31n) >> 3n))
+	                                              ) :
           /* otherwise */                       err("An integer size or an ArrayBuffer must be provided when initalizing a BitArray");
     
     super(buf);
@@ -106,12 +106,6 @@ export default class BitArray extends DataView implements BA {
     return this.getUint8((i / 8) >>> 0) & (128 >> (i & 7)) ? 1 : 0;
   }
 
-  clear() : BitArray {
-  // Resets the BitArray in place
-    for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i,0);
-    return this;
-  }
-
   isEqual(bar : BitArray) : boolean {
   // Checks if two BitArrays have the same bits set
     let len = this.buffer.byteLength,
@@ -119,12 +113,6 @@ export default class BitArray extends DataView implements BA {
     if (this === bar) return res;
     for (let i = 0; res && i < len; i += 4) res = this.getUint32(i) === bar.getUint32(i);
     return res;
-  }
-
-  fill() : BitArray {
-  // Sets the BitArray in place
-    for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i, 0xffffffff);
-    return this;
   }
 
   not(inPlace = false) : BitArray {
@@ -164,7 +152,7 @@ export default class BitArray extends DataView implements BA {
     return this;
   }
 
-  slice(a = 0, b = this.buffer.byteLength) : BitArray{
+  slice(a = 0, b = this.buffer.byteLength) : BitArray {
   // Slices BitArray and returns a new BitArray with buffer byteLength in multiples of 4 bytes (32 bits)
   // The default argument values instantiate a clone.
     b = a + Number((BigInt(b - a + 31) & ~31n));
@@ -184,12 +172,19 @@ export default class BitArray extends DataView implements BA {
     return new Uint8Array(this.buffer).reduce((p,c) => p + c.toString(2).padStart(8,"0"),"");
   }
 
+  wipe(b : boolean = false) : BitArray {
+  // Sets the BitArray in place
+    const val = b ? 0xffffffff : 0;
+    for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i, val);
+    return this;
+  }
+
   xor(bar : BitArray, inPlace = false) : BitArray {
   // Xor of this and bar. Example: 1100 & 1001 = 0101;
     const len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
           res = inPlace ? this : this.slice();
 
-    if(this === bar) res.clear();
+    if(this === bar) res.wipe(false);
     for (let i = 0; i < len; i += 4) res.setUint32(i,this.getUint32(i) ^ bar.getUint32(i));
     return res;
   }

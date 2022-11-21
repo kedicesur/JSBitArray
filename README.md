@@ -43,12 +43,12 @@ a.popcnt;            // 2
 * **`BitArray.isConvertable()`**: Returns `true` if the provided argument is either a `BitArray` or an `ArrayBufferView` type.
 
 ### **Properties**
-* **`length`**: An immutable property returning the actual length of the `BitArray`. All operations are performed up to the `length` by the exception of convertions back to `Array`s or `TypedArrays` which are done up to the `size` as explained below.
-* **`popcnt`**: Returns the total number of 1s in the `BitArray`.
-* **`size`**: An immutable property returning the requested size at construction time. Although you may set bits beyond the `size` value up to the `length` any convertions back to `Array`s or `TypedArray`s are limited to the `size` property value. Accordingly if you intend to make such convertions then it would be wise to not populate the `BitArray` beyond it's `size`.
+* **`length : number`**: An immutable property returning the actual length of the `BitArray`. All operations are performed up to the `length` by the exception of convertions back to `Array`s or `TypedArrays` which are done up to the `size` as explained below.
+* **`popcnt : number`**: Returns the total number of 1s in the `BitArray`.
+* **`size : number`**: An immutable property returning the requested size at construction time. Although you may set bits beyond the `size` value up to the `length` any convertions back to `Array`s or `TypedArray`s are limited to the `size` property value. Accordingly if you intend to make such convertions then it would be wise to not populate the `BitArray` beyond it's `size`.
 ### **Methods**
 #### Tests
-* **`.all()`**: Returns `true` if all bits in the `BitArray` are set.
+* **`.all() : boolean`**: Returns `true` if all bits in the `BitArray` are set.
 
 ```javascript
 var a = new BitArray(10);
@@ -58,7 +58,7 @@ a.reset(7);// 11111110111111111111111111111111
 a.all();   // false 
 ```
 
-* **`.any()`**: Returns `true` if any of the bits in the `BitArray` are set. If returns `false` then all bits are 0.
+* **`.any() : boolean`**: Returns `true` if any of the bits in the `BitArray` are set. If returns `false` then all bits are 0.
 
 ```javascript
 var a = new BitArray(10);
@@ -67,7 +67,7 @@ a.set(7);  // 00000001000000000000000000000000
 a.any();   // true 
 ```
 
-* **`.isEqual()`**: Returns `true` if tested `BitArray`s have the same bits set.
+* **`.isEqual() : boolean`**: Returns `true` if tested `BitArray`s have the same bits set.
 
 ```javascript
 var a = new BitArray(10),
@@ -78,7 +78,7 @@ a.isEqual(b);  // true
 ```
 
 #### Logical Operators
-* **`.and(bar, inPlace = false)`**: And of `this` and `bar`. Example: 1100 & 1001 = 1000. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
+* **`.and(bar : BitArray, inPlace : boolean = false)`**: And of `this` and `bar`. Example: 1100 & 1001 = 1000. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
 
 ```javascript
 var a = new BitArray(10),
@@ -98,19 +98,18 @@ a.and(b);  // 00000001000000000000000000000000
 b.and(a);  // 0000000100000000000000000000000000000000000000000000000000000000
 ```
 
-* **`.not(inPlace = false)`**: Flips all the bits in this buffer. Example: 1100 = 0011. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
-* **`.or(bar, inPlace = false)`**: Or of this and bar. Example: 1100 & 1001 = 1101. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
-* **`.xor(bar, inPlace = false)`**: Xor of this and bar. Example: 1100 & 1001 = 0101. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
+* **`.not(inPlace : boolean = false) : BitArray`**: Flips all the bits in this buffer. Example: 1100 = 0011. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
+* **`.or(bar : BitArray, inPlace : boolean = false) : BitArray`**: Or of this and bar. Example: 1100 & 1001 = 1101. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
+* **`.xor(bar : BitArray, inPlace : boolean = false) : BitArray`**: Xor of this and bar. Example: 1100 & 1001 = 0101. If `inPlace` is set to `true` then the operation is performed in place (`this` holds the result).
 #### Modifiers
-* **`.clear()`**: Resets the `BitArray` in place.
-* **`.fill()`**: Sets the `BitArray` in place.
-* **`.randomize()`**: Sets or resets every bit in the `BitArray` randomly in place
-* **`.reset(i)`**: Resets the value at given index `i`.
-* **`.set(i)`**: Sets the value at given index `i`.
-* **`.toggle(i)`**: Flips the value at given index `i`.
+* **`.randomize() : BitArray`**: Sets or resets every bit in the `BitArray` randomly in place
+* **`.reset(i : number) : BitArray`**: Resets the value at given index `i`.
+* **`.set(i : number) : BitArray`**: Sets the value at given index `i`.
+* **`.toggle(i : number) : BitArray`**: Flips the value at given index `i`.
+* **`.wipe(b : boolean) : BitArray`**: Wipes the `BitArray` with 1 (`b === true`) or 0 (`b === false`).
 #### Others
-* **`.slice(a = 0, b = this.buffer.byteLength)`**: Slices `BitArray` and returns a new `BitArray` with `buffer.byteLength` in multiples of 4 bytes (32 bits). Pay attention that the arguments are in **byte** unit. When invoked with no arguments, the default argument values instantiate a clone.
-* **`.toString()`**: Returns the string representation of the `BitArray`.
+* **`.slice(a = 0, b = this.buffer.byteLength) : BitArray`**: Slices `BitArray` and returns a new `BitArray` with `buffer.byteLength` in multiples of 4 bytes (32 bits). Pay attention that the arguments are in **byte** unit. When invoked with no arguments, the default argument values instantiate a clone.
+* **`.toString() : string`**: Returns the string representation of the `BitArray`.
 ### **Converting from a BitArray into an Array or TypedArray**
 Since `BitArray` is an iterable object, converting it into an `Array` is easily achieved by the spread operator. Conversion into `TypeArrays` is done by the `TypedArray.from(BitArray)` method as follows...
 
