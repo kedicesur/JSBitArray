@@ -1,293 +1,226 @@
-// The entry file of your WebAssembly module.
-import { OBJECT_MAXSIZE } from "../node_modules/assemblyscript/std/assembly/rt/common";
+import { BLOCK_MAXSIZE } from "../node_modules/assemblyscript/std/assembly/rt/common.ts";
+import { Runtime } from "../node_modules/assemblyscript/std/assembly/shared/runtime.ts";
+import { E_INVALIDLENGTH } from "../node_modules/assemblyscript/std/assembly/util/error.ts";
 
-class BitArray extends DataView {
+
+abstract class ArrayBufferView {
+
+  readonly buffer: ArrayBuffer;
+  @unsafe readonly dataStart: usize;
+  readonly byteLength: i32;
+
+  get byteOffset(): i32 {
+    return <i32>(this.dataStart - changetype<usize>(this.buffer));
+  }
+
+  protected constructor(length: i32, alignLog2: i32) {
+    if (<u32>length > <u32>BLOCK_MAXSIZE >>> alignLog2) throw new RangeError(E_INVALIDLENGTH);
+    let buffer = changetype<ArrayBuffer>(__new(length = length << alignLog2, idof<ArrayBuffer>()));
+    if (ASC_RUNTIME != Runtime.Incremental) {
+      memory.fill(changetype<usize>(buffer), 0, <usize>length);
+    }
+    this.buffer = buffer; // links
+    this.dataStart = changetype<usize>(buffer);
+    this.byteLength = length;
+  }
+}
+
+// BitView is an ArrayBufferView like DataView but with fixed <u64> access and bit level indexing.
+class BitView extends ArrayBufferView {
+
   readonly length : u64;
-  readonly size   : u64;
 
-  constructor(size : u64, ab : ArrayBuffer) {
-    super(ab);
-    this.size   = size;
-    this.length = this.buffer.byteLength * 8;
+  constructor(l : u64) {
+    const U64_SIZE : i32 = <u64>l + 63 >>> 6 as i32; // Total number of 64bit blocks in the BitView.
+
+    super(U64_SIZE, alignof<u64>());
+    this.length = l;
   }
 
-  get popcnt() : u64 {
-    let cnt : u64 = 0,
-        idx = 0,
-        len = this.buffer.byteLength,
-        mod = len % 8;
+  get size() : u64 {
+    return <u64>this.byteLength << 3;
+  }
+}
+
+export function __release(ptr : usize) : void {
+  __unpin(ptr);
+}
+
+export function new_BitView(l : f64) : i32 {
+  const ba : BitView = new BitView(<u64>l);
+  return <i32>__pin(changetype<usize>(ba)) >>> 0;
+}
+
+export function all(ptr : usize) : u8 {
+  const BITVIEW : BitView = changetype<BitView>(ptr),
+        EXCESS : u64      = BITVIEW.length & 63;
+  let r : bool = true,
+      i : i32  = <i32>BITVIEW.dataStart,
+      l : i32  = i + BITVIEW.byteLength - EXCESS ? 8 : 0;
+
+  while (r && i < l){
+    r = load<u64>(i) === u64.MAX_VALUE;
+    i += 8;
+  }
+  if (r && EXCESS) r = (load<u64>(i) | (u64.MAX_VALUE >>> EXCESS)) === u64.MAX_VALUE;
+  return r ? 1 : 0;
+}
+
+export function and_or_xor(ptrA : usize, ptrB : usize, op : u8) : i32 {
+  const BITVIEW_A : BitView = changetype<BitView>(<usize>ptrA),
+        BITVIEW_B : BitView = changetype<BitView>(<usize>ptrB),
+        BITVIEW_R : BitView = new BitView(min<u64>(BITVIEW_A.length, BITVIEW_B.length));
+  
+  switch (op){
+    case 1: for (let i : i32 = 0; i < BITVIEW_R.byteLength; i += 8) store<u64>(BITVIEW_R.dataStart + i, load<u64>(BITVIEW_A.dataStart + i) & load<u64>(BITVIEW_B.dataStart + i)); break;
+    case 2: for (let i : i32 = 0; i < BITVIEW_R.byteLength; i += 8) store<u64>(BITVIEW_R.dataStart + i, load<u64>(BITVIEW_A.dataStart + i) | load<u64>(BITVIEW_B.dataStart + i)); break;
+    case 3: for (let i : i32 = 0; i < BITVIEW_R.byteLength; i += 8) store<u64>(BITVIEW_R.dataStart + i, load<u64>(BITVIEW_A.dataStart + i) ^ load<u64>(BITVIEW_B.dataStart + i)); break;
+  }
+  return changetype<i32>(BITVIEW_R) >>> 0;
+}
+
+export function any(ptr : usize) : u8 {
+  const BITVIEW : BitView = changetype<BitView>(ptr);
+  let r : bool = true,
+      i : i32  = <i32>BITVIEW.dataStart,
+      l : i32  = i + BITVIEW.byteLength;
+
+  while (r && i < l){
+    r = load<u64>(i) === 0;
+    i += 8;
+  }
+  return r ? 0 : 1;
+}
+
+export function at(ptr: usize, index: f64) : u8 {
+  const INDEX_U64 : u64   = <u64>index,
+        INNER_INDEX : u8  = <u8>(INDEX_U64 & 7),
+        BYTE_OFFSET : usize = <usize>INDEX_U64 >>> 3,
+        BITVIEW : BitView = changetype<BitView>(ptr);
         
-    if (mod && mod !== 4) throw new TypeError("Invalid BitArray.buffer.byteLength");
-    len -= mod;
-    if (len) for (; idx < len; idx += 8) cnt += popcnt(this.getUint64(idx));
-    if (mod) cnt += popcnt(this.getUint32(idx));
-    return cnt;
-  }
+  return load<u8>(BITVIEW.dataStart + BYTE_OFFSET) & (0x80 >>> INNER_INDEX);
+}
 
-  all() : boolean {
-  // Returns true if all bits in the BitArray are set.
-    let idx = 0,
-        len = this.buffer.byteLength,
-        mod = len % 8,
-        res = true;
+export function compare(ptrA : usize, ptrB : usize) : i32 {
+  const BITVIEW_A = changetype<BitView>(ptrA),
+        BITVIEW_B = changetype<BitView>(ptrB);
+  if (BITVIEW_A.byteLength !== BITVIEW_B.byteLength) throw new RangeError("Lengths are not equal..!");
+  return memory.compare(BITVIEW_A.dataStart, BITVIEW_B.dataStart, BITVIEW_A.byteLength);
+}
 
-    if (mod && mod !== 4) throw new TypeError("Invalid BitArray.buffer.byteLength");
-    len -= mod;
-    if (len) for (; res && idx < len; idx += 8) res = this.getUint64(idx) === 0xffffffffffffffff;
-    res && !!mod && (res = this.getUint32(idx) === 0xffffffff);
-    return res;
-  }
+export function length(ptr : usize) : f64 {
+  return changetype<BitView>(ptr).length as f64;
+}
 
-  and(bar : BitArray, inPlace : boolean = false) : BitArray {
-  // And of this and bar. Example: 1100 & 1001 = 1000
-    let idx = 0,
-        len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
-        mod = len % 8,
-        res = inPlace ? this : this.slice();
+export function not(ptr : usize) : i32 {
+  const BITVIEW_A : BitView = changetype<BitView>(<usize>ptr),
+        BITVIEW_R : BitView = new BitView(BITVIEW_A.length);
+  for (let i : i32 = 0; i < BITVIEW_R.byteLength; i += 8) store<u64>(i + <i32>BITVIEW_R.dataStart, ~load<u64>(i + <i32>BITVIEW_A.dataStart));
+  return changetype<i32>(BITVIEW_R) >>> 0;
+}
 
-    if (mod && mod !== 4) throw new TypeError("Invalid BitArray.buffer.byteLength");
-    if (this === bar) return res;
-    len -= mod;
-    if (len) for (; idx < len; idx += 8) res.setUint64(idx, this.getUint64(idx) & bar.getUint64(idx));
-    if (mod) res.setUint32(idx, this.getUint32(idx) & bar.getUint32(idx));
-    return res;
-  }
-
-  any() : boolean {
-  // Returns true if all bits in the BitArray are set.
-    let idx = 0,
-        len = this.buffer.byteLength,
-        mod = len % 8,
-        res = true;
-
-    if (mod && mod !== 4) throw new TypeError("Invalid BitArray.buffer.byteLength");
-    len -= mod;
-    if (len) for (; res && idx < len; idx += 8) res = this.getUint64(idx) === 0;
-    res && !!mod && (res = this.getUint32(idx) === 0);
-    return !res;
-  }
+export function popcnt(ptr : usize) : f64 {
+  const BITVIEW : BitView  = changetype<BitView>(ptr),
+        END : usize        = BITVIEW.dataStart + BITVIEW.byteLength;
+  let r : u64   = 0;
   
-  at(i : u64) : u8 {
-  // Fetches the value at the given index
-    return this.getUint8(<i32>(i >> 3)) & (128 >> <i8>(i & 7)) ? 1 : 0;
-  }
+  for (let index : usize = BITVIEW.dataStart; index < END; index += 8) r += i64.popcnt(load<u64>(index));
+  return <f64>r;
+}
 
-  isEqual(bar : BitArray) : boolean {
-  // Checks if two BitArrays have the same bits set
-    let idx = 0,
-        len = this.buffer.byteLength,
-        mod = len % 8,
-        res = true;
+export function reset(ptr : usize, index : f64) : void {
+  const INDEX_U64 : u64     = <u64>index,
+        INNER_INDEX : u8    = <u8>INDEX_U64 & 7,
+        BYTE_OFFSET : usize = <usize>(INDEX_U64 >>> 3),
+        BITVIEW : BitView   = changetype<BitView>(ptr),
+        BYTE_ADDR : usize   = BITVIEW.dataStart + BYTE_OFFSET;
 
-    if (mod && mod !== 4) throw new TypeError("Invalid BitArray.buffer.byteLength");
-    if (this === bar) return res;
-    len -= mod;
-    if (len) for (; res && idx < len; idx += 8) res = this.getUint64(idx) === bar.getUint64(idx);
-    res && !!mod && (res = this.getUint32(idx) === bar.getUint32(idx));
-    return res;
-  }
+  store<u8>(BYTE_ADDR, load<u8>(BYTE_ADDR) & ~(0x80 >>> INNER_INDEX));
+}
 
-  not(inPlace : boolean = false) : BitArray {
-  // Flips all the bits in this buffer. Example: 1100 = 0011
-    let idx = 0,
-        len = this.buffer.byteLength,
-        mod = len % 8,
-        res = inPlace ? this : this.slice();
+export function set(ptr : usize, index : f64) : void {
+  const INDEX_U64 : u64     = <u64>index,
+        INNER_INDEX : u8    = <u8>INDEX_U64 & 7,
+        BYTE_OFFSET : usize = <usize>INDEX_U64 >>> 3,
+        BITVIEW : BitView   = changetype<BitView>(ptr),
+        BYTE_ADDR : usize   = BITVIEW.dataStart + BYTE_OFFSET;
 
-    if (mod && mod !== 4) throw new TypeError("Invalid BitArray.buffer.byteLength");
-    len -= mod;
-    if (len) for (; idx < len; idx += 8) res.setUint64(idx,~(this.getUint64(idx) >>> 0));
-    if (mod) res.setUint32(idx,~(this.getUint32(idx) >>> 0));
-    return res;
-  }
+  store<u8>(BYTE_ADDR, load<u8>(BYTE_ADDR) | (0x80 >>> INNER_INDEX));
+}
 
-  or(bar : BitArray, inPlace : boolean = false) : BitArray {
-  // And of this and bar. Example: 1100 & 1001 = 1000
-    let idx = 0,
-        len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
-        mod = len % 8,
-        res = inPlace ? this : this.slice();
+export function size(ptr : usize) : f64 {
+  return changetype<BitView>(ptr).size as f64;
+}
 
-    if (mod && mod !== 4) throw new TypeError("Invalid BitArray.buffer.byteLength");
-    if (this === bar) return res;
-    len -= mod;
-    if (len) for (; idx < len; idx += 8) res.setUint64(idx, this.getUint64(idx) | bar.getUint64(idx));
-    if (mod) res.setUint32(idx, this.getUint32(idx) | bar.getUint32(idx))
-    return res;
-  }
+export function slice(ptr : usize, start : f64, end : f64) : i32 {
+  const BITVIEW_A : BitView = changetype<BitView>(ptr);
+
+  if (end < 0) end = <f64>BITVIEW_A.length;
   
-  randomize() : BitArray {
-  // Sets or resets every bit in the BitArray randomly in place
-    let idx = 0,
-        len = this.buffer.byteLength,
-        mod = len % 8;
-    
-    if (mod && mod !== 4) throw new TypeError("Invalid BitArray.buffer.byteLength");
-    len -= mod;
-    if (len) for (; idx < len; idx += 8) this.setUint64(idx, (<u64>(Math.random() * u32.MAX_VALUE) << 32) | <u32>(Math.random() * u32.MAX_VALUE));
-    if (mod) this.setUint32(idx, <u32>(Math.random() * u32.MAX_VALUE));
-    return this;
+  const BITVIEW_R : BitView = new BitView(<u64>(end - start)),
+        COPY_START : usize  = BITVIEW_A.dataStart + (<u64>start >>> 6) as usize,
+        BIT_OFFSET : u8     = (<u64>start & 63) as u8;
+  let left : u64,
+      right : u64,
+      next : i32;
+  for (let cursor : i32 = 0; cursor < BITVIEW_R.byteLength; cursor += 8){
+    next = cursor + 8;
+    left = load<u64>(COPY_START + cursor) << BIT_OFFSET;
+    right = next < BITVIEW_R.byteLength ? load<u64>(COPY_START + next) >>> (64 - BIT_OFFSET)
+                                        : 0;
+    store<u64>(BITVIEW_R.dataStart + cursor, left | right);
   }
+  return changetype<i32>(BITVIEW_R) >>> 0;
+}
 
-  reset(i : u64) : BitArray{
-  // Resets the value at the given index.
-    const j = <i32>(i >> 3);
-    this.setUint8(j, this.getUint8(j) & ~(128 >> (<u8>i & 7)));
-    return this;
-  }
+export function toggle(ptr : usize, index : f64) : void {
+  const INDEX_U64 : u64   = <u64>index,
+        INNER_INDEX : u8  = <u8>(INDEX_U64 & 7),
+        BYTE_OFFSET : i32 = <i32>(INDEX_U64 >>> 3),
+        BITVIEW : BitView = changetype<BitView>(ptr),
+        BYTE_ADDR : usize = BITVIEW.dataStart + BYTE_OFFSET;
 
-  set(i : f64) : BitArray{
-  // Sets the value at the given index.
-    const j = <i32>(i / 8);
-    this.setUint8(j, this.getUint8(j) | (128 >> (<i8>i & 7)));
-    return this;
-  }
+  if (INDEX_U64 > BITVIEW.length) throw new RangeError("Index out of range");
+  store<u8>(BYTE_ADDR, load<u8>(BYTE_ADDR) ^ (0x80 >>> INNER_INDEX));
+}
 
-  slice(a : u32 = 0, b : u32 = this.buffer.byteLength) : BitArray {
-  // Slices BitArray and returns a new BitArray with buffer byteLength in multiples of 4 bytes (32 bits)
-  // The default argument values instantiate a clone.
-    if (a > b || b > (<u32>this.buffer.byteLength)) throw new RangeError("Arguments are out of limits");
-    b = a + ((b - a + 3) & ~3);
-    return new BitArray(false, this.buffer.slice(a, b));
-  }
+export function toString(ptr : usize) : string {
+  const BITVIEW : BitView  = changetype<BitView>(ptr),
+        FIRST_WORD : u64   = load<u64>(BITVIEW.dataStart),
+        LAST_WORD : u64    = load<u64>(BITVIEW.dataStart + BITVIEW.byteLength - 8),
+        START_STR : string = bswap<u64>(FIRST_WORD).toString(2).padStart(64,"0").slice(0, <i32>min(BITVIEW.length, 64)),
+        MID_STR : string   = BITVIEW.length > 128 ? `.. ${(BITVIEW.byteLength >>> 3) - 2 << 6} more bits ..` : "",
+        END_STR : string   = BITVIEW.length > 64 ? bswap<u64>(LAST_WORD).toString(2).padStart(64,"0").slice(0, <i32>BITVIEW.length & 63 || 64) : "";
+  return  START_STR + MID_STR + END_STR;
+}
 
-  toggle(i : u64) : BitArray{
-  // Flips the value at the given index
-    const j = <i32>(i >> 3);
-    this.setUint8(j, this.getUint8(j) ^ (128 >> (<u8>i & 7)));
-    return this;
-  }
-
-  // For efficiency maps this.buffer to an Uint8Array and byte by byte by reducing.
-  // However stringifying a huge BitArray is meaningless. Perhaps limiting the string size to 128 is reasonable.
-  toString() : string {
-    let idx = 0,
-        len = this.buffer.byteLength,
-        mod = len % 8,
-        str = "";
-
-    if (mod && mod !== 4) throw new TypeError("Invalid BitArray.buffer.byteLength");
-    len -= mod;  
-    if (len) for (; idx < len; idx += 8) str += this.getUint64(idx).toString(2).padStart(64,"0");
-    if (mod) str += this.getUint32(idx).toString(2).padStart(32,"0");
-    return str;
-  }
-
-  wipe(b : boolean) : BitArray {
-  // Sets or resets the BitArray in place depending on the boolean value
-    let idx = 0,
-        len = this.buffer.byteLength,
-        mod = len % 8,
-        val = b ? u64.MAX_VALUE : 0;
-
-    if (mod && mod !== 4) throw new TypeError("Invalid BitArray.buffer.byteLength");
-    len -= mod;  
-    if (len) for (; idx < len; idx += 8) this.setUint64(idx, val);
-    if (mod) this.setUint32(idx, <u32>val)
-    return this;
-  }
-
-  xor(bar : BitArray, inPlace : boolean = false) : BitArray {
-  // And of this and bar. Example: 1100 & 1001 = 1000
-    let idx = 0,
-        len = Math.min(this.buffer.byteLength,bar.buffer.byteLength),
-        mod = len % 8,
-        res = inPlace ? this : this.slice();
-
-    if (mod && mod !== 4) throw new TypeError("Invalid BitArray.buffer.byteLength");
-    if (this === bar) return res.wipe(false);
-    len -= mod;
-    if (len) for (; idx < len; idx += 8) res.setUint64(idx, this.getUint64(idx) ^ bar.getUint64(idx));
-    if (mod) res.setUint32(idx, this.getUint32(idx) ^ bar.getUint32(idx))
-    return res;
+export function wipe(ptr : usize, val : u8) : void {
+  const BITVIEW : BitView = changetype<BitView>(ptr),
+        END : usize       = BITVIEW.dataStart + BITVIEW.byteLength;
+  switch (val){
+    case 0 : memory.fill(BITVIEW.dataStart, u8.MIN_VALUE, BITVIEW.byteLength); break;
+    case 1 : memory.fill(BITVIEW.dataStart, u8.MAX_VALUE, BITVIEW.byteLength); break;
+    default: for (let index : usize = BITVIEW.dataStart; index < END; index += 8) store<u64>(index, (<u64>(Math.random() * u32.MAX_VALUE) << 32) | <u32>(Math.random() * u32.MAX_VALUE)); 
   }
 }
 
-// Exposed interface functions
-
-export function from_ArrayBuffer(ab : ArrayBuffer) : BitArray {
-  const xs = (ab.byteLength + 3) & 0xfffffffc,
-        sz : u64 = ab.byteLength * 8;
-  if (<usize>ab.byteLength > OBJECT_MAXSIZE - 4) throw new RangeError(`Maximum allowed ArrayBuffer size is ${OBJECT_MAXSIZE - 4}`);
-  if (xs > ab.byteLength) ab = Uint8Array.wrap(ab,0,xs).buffer;
-  return new BitArray(sz,ab);
+/*
+export function fromArrayBuffer(ab : ArrayBuffer) : i32 {
+  const bln : u32   = ab.byteLength,
+        ptr : usize = new BitView(bln * 8).ptr;
+  
+  let idx : u32 = 0;
+  
+  while (bln - idx > 7){
+    store<u64>(ptr+idx, dvw.getUint64(idx));
+    idx += 8;
+  }
+  while (idx < bln) {
+    store<u8>(ptr+0, dvw.getUint8(idx));
+    idx++;
+  }
+  return ptr as i32;
 }
 
-export function new_BitArray(n : f64) : BitArray {
-  const byteLength : u32 = <u32>(((<u64>n + 31) & <u64>0x1ffffffe0) >> 3);
-
-  if (n > <f64>OBJECT_MAXSIZE * 8 - 32) throw new RangeError(`Maximum allowed BitArray size is ${OBJECT_MAXSIZE * 8 - 32}`);
-  return new BitArray(<u64>n, new ArrayBuffer(byteLength)); // new ArrayBuffer(<u32>Math.ceil(<f32>n/32)*4)
-}
-
-export function all(target : BitArray) : boolean {
-  return target.all();
-}
-
-export function and(target : BitArray, source : BitArray, inPlace : boolean) : BitArray {
-  return target.and(source, inPlace);
-}
-
-export function any(target : BitArray) : boolean {
-  return target.any();
-}
-
-export function at(target : BitArray, i : f64) : u8 {
-  return target.at(<u64>i);
-}
-
-export function isEqual(target : BitArray, source : BitArray) : boolean {
-  return target.isEqual(source);
-}
-
-export function length(target : BitArray) : f64 {
-  return target.length as f64;
-}
-
-export function not(target : BitArray, inPlace : boolean) : BitArray {
-  return target.not(inPlace);
-}
-
-export function or(target : BitArray, source : BitArray, inPlace : boolean) : BitArray {
-  return target.or(source,inPlace);
-}
-
-export function popcount(target : BitArray) : f64 {
-  return target.popcnt as f64;
-}
-
-export function randomize(target : BitArray) : BitArray {
-  return target.randomize();
-}
-
-export function reset(Target : BitArray, i : f64) : BitArray {
-  return Target.reset(<u64>i);
-}
-
-export function set(Target : BitArray, i : f64) : BitArray {
-  return Target.set(i);
-}
-
-export function size(target : BitArray) : f64 {
-  return target.size as f64;
-}
-
-export function slice(target : BitArray, a : u32, b : u32) : BitArray {
-  return target.slice(a,b);
-}
-
-export function toggle(Target : BitArray, i : f64) : BitArray {
-  return Target.toggle(<u64>i);
-}
-
-export function toString(target : BitArray) : string {
-  return target.toString();
-}
-
-export function wipe(target : BitArray, b : boolean = false) : BitArray {
-  return target.wipe(b);
-}
-
-export function xor(target : BitArray, source : BitArray, inPlace : boolean) : BitArray {
-  return target.xor(source,inPlace);
-}
+//export { randomnessTest , randomU64 };
+*/

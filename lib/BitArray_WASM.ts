@@ -1,127 +1,93 @@
-import * as Interface from "../build/release.js";
+import { instantiate } from "../build/release.js";
 
-export class BitArray_WASM {
-  private _BA : ReturnType<typeof Interface.new_BitArray>; // an opaque reference to the BitArray created in AssemblyScript
+const BV = await instantiate(await WebAssembly.compileStreaming(fetch(new URL("../build/release.wasm",import.meta.url))),{}),
+      FR = new FinalizationRegistry(__garbage);
 
-  constructor(sizeOrBuffer : number | ArrayBuffer) {
-    const err : (e : string) => never = e => {throw new Error(e);};
+function __garbage(ptr : number) : void {
+  BV.__release(ptr);
+}
 
-    this._BA = sizeOrBuffer instanceof ArrayBuffer                ? Interface.from_ArrayBuffer(sizeOrBuffer):
-               Number.isInteger(sizeOrBuffer)&& sizeOrBuffer >= 0 ? Interface.new_BitArray(sizeOrBuffer)    :
-               /* otherwise */                                      err("An integer size or an ArrayBuffer must be provided when initalizing a BitArray");
-  }
-
-  get length () : number {
-    return Interface.length(this._BA) >>> 0;
-  }
-
-  get popcnt() : number {
-    return Interface.popcount(this._BA) >>> 0;
-  }
-
-  get size() : number {
-    return Interface.size(this._BA) >>> 0;
+export class BitArray {
+  private ptr : number;
+  readonly length : number;
+  constructor(n : number, fromAS : boolean = false){
+    this.ptr = fromAS ? n
+                      : BV.new_BitView(n);
+    this.length = BV.length(this.ptr);
+    FR.register(this, this.ptr);
   }
 
   all() : boolean {
-    return Interface.all(this._BA);
+    return !!BV.all(this.ptr);
   }
 
-  and(source : BitArray_WASM, inPlace : boolean = false) : BitArray_WASM {
-    let tmp;
-    return inPlace ? ( this._BA = Interface.and(this._BA, source._BA, inPlace)
-                     , this
-                     )
-                   : ( tmp = new BitArray_WASM(0)
-                     , tmp._BA = Interface.and(this._BA, source._BA, inPlace)
-                     , tmp
-                     );
+  and(x: BitArray) : BitArray {
+    const ptr = BV.and_or_xor(this.ptr, x.ptr, 1);
+    return new BitArray(ptr,true);
   }
 
   any() : boolean {
-    return Interface.any(this._BA);
+    return !!BV.any(this.ptr);
   }
 
   at(i : number) : number {
-    return Interface.at(this._BA, i);
+    return BV.at(this.ptr, i) ? 1 : 0;
   }
 
-  isEqual(source : BitArray_WASM) : boolean {
-    return Interface.isEqual(this._BA, source._BA);
+  isEqual(x : BitArray) : boolean {
+    return !BV.compare(this.ptr,x.ptr);
   }
 
-  not(inPlace : boolean = false) : BitArray_WASM {
-    let tmp;
-    return inPlace ? ( this._BA = Interface.not(this._BA, inPlace)
-                     , this
-                     )
-                   : ( tmp = new BitArray_WASM(0)
-                     , tmp._BA = Interface.not(this._BA, inPlace)
-                     , tmp
-                     );
+  not() : BitArray {
+    const ptr = BV.not(this.ptr);
+    return new BitArray(ptr,true);
   }
 
-  or(source : BitArray_WASM, inPlace : boolean = false) : BitArray_WASM {
-    let tmp;
-    return inPlace ? ( this._BA = Interface.or(this._BA, source._BA, inPlace)
-                     , this
-                     )
-                   : ( tmp = new BitArray_WASM(0)
-                     , tmp._BA = Interface.or(this._BA, source._BA, inPlace)
-                     , tmp
-                     );
+  or(x: BitArray) : BitArray {
+    const ptr = BV.and_or_xor(this.ptr, x.ptr, 2);
+    return new BitArray(ptr,true);
   }
 
-  randomize() : BitArray_WASM {
-    this._BA = Interface.randomize(this._BA);
+  popcnt() : number {
+    return BV.popcnt(this.ptr) >>> 0;
+  }
+
+  reset(i: number) : BitArray {
+    BV.reset(this.ptr, i);
     return this;
   }
 
-  reset(i : number) : BitArray_WASM {
-    Interface.reset(this._BA, i);
+  set(i : number) : BitArray {
+    BV.set(this.ptr,i);
     return this;
   }
 
-  set(i : number) : BitArray_WASM {
-    Interface.set(this._BA, i);
-    return this;
+  slice(start = 0, end = -1){
+    const ptr = BV.slice(this.ptr, start, end);
+    return new BitArray(ptr,true);
   }
 
-  slice(a: number = 0, b : number = this.length >> 3) : BitArray_WASM {
-    const res = new BitArray_WASM(0);
-    res._BA = Interface.slice(this._BA, a, b);
-    return res;
-  }
-
-  toggle(i : number) : BitArray_WASM {
-    Interface.toggle(this._BA, i);
+  toggle(i : number) : BitArray {
+    BV.toggle(this.ptr,i);
     return this;
   }
 
   toString() : string {
-    return Interface.toString(this._BA);
+    return BV.toString(this.ptr);
   }
 
-  wipe(b : boolean = false) : BitArray_WASM {
-    Interface.wipe(this._BA, b);
+  wipe(n : number) : BitArray {
+    BV.wipe(this.ptr,n);
     return this;
   }
 
-  xor(source : BitArray_WASM, inPlace : boolean = false) : BitArray_WASM {
-    let tmp;
-    return inPlace ? ( this._BA = Interface.xor(this._BA, source._BA, inPlace)
-                     , this
-                     )
-                   : ( tmp = new BitArray_WASM(0)
-                     , tmp._BA = Interface.xor(this._BA, source._BA, inPlace)
-                     , tmp
-                     );
-  }
-	
-  *[Symbol.iterator]() : Generator<number> {
-     let i = 0,
-         l = this.size;
-     while (i < l) yield this.at(i++);
+  xor(x: BitArray) : BitArray {
+    const ptr = BV.and_or_xor(this.ptr, x.ptr, 3);
+    return new BitArray(ptr,true);
   }
 
+  *[Symbol.iterator]() : Generator<number> {
+     let i = 0;
+     while (i < this.length) yield this.at(i++);
+  }
 }
