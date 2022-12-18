@@ -4,7 +4,7 @@ import { pi as piBar } from "./pi_bitarray.ts";
 import { pi as piWas } from "./pi_bitarray_wasm.ts";
 
 let s = 0,
-    e = 1e6,
+    e = 1e7,
     r = 0;
 
 Deno.bench( `Array       : ${s}-${e}`
