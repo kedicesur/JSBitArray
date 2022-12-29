@@ -36,7 +36,7 @@ export function pi(start : number, end : number) : number {
   start % 2 && start--;           // make start even
   
   let n  = end - start,
-      cs = n/100,
+      cs = n,
       cc = Math.floor(n/cs),      // chunk count
       xs = n % cs,                // excess after last chunk
       pc = 0;                     // prime count

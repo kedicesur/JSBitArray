@@ -4,16 +4,21 @@ const BV = await instantiate(await WebAssembly.compileStreaming(fetch(new URL(".
       FR = new FinalizationRegistry(__garbage);
 
 function __garbage(ptr : number) : void {
-  BV.__release(ptr);
+  //console.log("GC worked..!");
+  BV.__unpin(ptr);
 }
 
 export class BitArray {
   private ptr : number;
+  private view : DataView;
   readonly length : number;
-  constructor(n : number, fromAS : boolean = false){
-    this.ptr = fromAS ? n
-                      : BV.new_BitView(n);
-    this.length = BV.length(this.ptr);
+  constructor(n : number, fromWASM : boolean = false){
+    this.ptr = fromWASM ? n
+                        : BV.new_BitView(n);
+    this.length = fromWASM ? BV.__length(this.ptr)
+                           : n;
+    this.view = new DataView(BV.memory.buffer,BV.__dataStart(this.ptr),BV.__byteLength(this.ptr));
+    BV.__pin(this.ptr);
     FR.register(this, this.ptr);
   }
 
@@ -31,7 +36,14 @@ export class BitArray {
   }
 
   at(i : number) : number {
-    return BV.at(this.ptr, i) ? 1 : 0;
+    const BIT_MASK = 0x80 >>> (i & 7);
+    try {
+      return (this.view.getUint8(i >>> 3) & BIT_MASK) / BIT_MASK;
+    }
+    catch {
+      this.view = new DataView(BV.memory.buffer,BV.__dataStart(this.ptr),BV.__byteLength(this.ptr));
+      return (this.view.getUint8(i >>> 3) & BIT_MASK) / BIT_MASK;
+    }
   }
 
   isEqual(x : BitArray) : boolean {
@@ -52,23 +64,49 @@ export class BitArray {
     return BV.popcnt(this.ptr) >>> 0;
   }
 
-  reset(i: number) : BitArray {
-    BV.reset(this.ptr, i);
+  reset(i : number) : BitArray {
+    const BYTE_OFFSET = i >>> 3;
+    try {
+      this.view.setUint8(BYTE_OFFSET, this.view.getUint8(BYTE_OFFSET) & ~(0x80 >>> (i & 7)));
+    }
+    catch (e){
+      this.view = new DataView(BV.memory.buffer,BV.__dataStart(this.ptr),BV.__byteLength(this.ptr));
+      this.view.setUint8(BYTE_OFFSET, this.view.getUint8(BYTE_OFFSET) & ~(0x80 >>> (i & 7)));
+    }
     return this;
   }
 
   set(i : number) : BitArray {
-    BV.set(this.ptr,i);
+    const BYTE_OFFSET = i >>> 3;
+    try {
+      this.view.setUint8(BYTE_OFFSET, this.view.getUint8(BYTE_OFFSET) | (0x80 >>> (i & 7)));
+    }
+    catch {
+      this.view = new DataView(BV.memory.buffer,BV.__dataStart(this.ptr),BV.__byteLength(this.ptr));
+      this.view.setUint8(BYTE_OFFSET, this.view.getUint8(BYTE_OFFSET) | (0x80 >>> (i & 7)));
+    }
     return this;
   }
 
-  slice(start = 0, end = -1){
+  slice(start = 0, end = this.length) : BitArray {
+    if (  start < 0
+       || start > this.length
+       || end   < 0
+       || end   > this.length
+       ) throw new RangeError('the "start" or "end" indice is out of limits');
     const ptr = BV.slice(this.ptr, start, end);
     return new BitArray(ptr,true);
   }
 
   toggle(i : number) : BitArray {
-    BV.toggle(this.ptr,i);
+    const BYTE_OFFSET = i >>> 3;
+    try {
+      this.view.setUint8(BYTE_OFFSET, this.view.getUint8(BYTE_OFFSET) ^ (0x80 >>> (i & 7)));
+    }
+    catch {
+      this.view = new DataView(BV.memory.buffer,BV.__dataStart(this.ptr),BV.__byteLength(this.ptr));
+      this.view.setUint8(BYTE_OFFSET, this.view.getUint8(BYTE_OFFSET) ^ (0x80 >>> (i & 7)));
+    }
     return this;
   }
 
@@ -76,7 +114,7 @@ export class BitArray {
     return BV.toString(this.ptr);
   }
 
-  wipe(n : number) : BitArray {
+  wipe(n = 0) : BitArray {
     BV.wipe(this.ptr,n);
     return this;
   }

@@ -2,10 +2,23 @@ declare namespace __AdaptedExports {
   /** Exported memory */
   export const memory: WebAssembly.Memory;
   /**
-   * assembly/index/__release
+   * assembly/index/__byteLength
    * @param ptr `usize`
+   * @returns `i32`
    */
-  export function __release(ptr: number): void;
+  export function __byteLength(ptr: number): number;
+  /**
+   * assembly/index/__dataStart
+   * @param ptr `usize`
+   * @returns `i32`
+   */
+  export function __dataStart(ptr: number): number;
+  /**
+   * assembly/index/__length
+   * @param ptr `usize`
+   * @returns `f64`
+   */
+  export function __length(ptr: number): number;
   /**
    * assembly/index/new_BitView
    * @param l `f64`
@@ -33,25 +46,12 @@ declare namespace __AdaptedExports {
    */
   export function any(ptr: number): number;
   /**
-   * assembly/index/at
-   * @param ptr `usize`
-   * @param index `f64`
-   * @returns `u8`
-   */
-  export function at(ptr: number, index: number): number;
-  /**
    * assembly/index/compare
    * @param ptrA `usize`
    * @param ptrB `usize`
    * @returns `i32`
    */
   export function compare(ptrA: number, ptrB: number): number;
-  /**
-   * assembly/index/length
-   * @param ptr `usize`
-   * @returns `f64`
-   */
-  export function length(ptr: number): number;
   /**
    * assembly/index/not
    * @param ptr `usize`
@@ -65,24 +65,6 @@ declare namespace __AdaptedExports {
    */
   export function popcnt(ptr: number): number;
   /**
-   * assembly/index/reset
-   * @param ptr `usize`
-   * @param index `f64`
-   */
-  export function reset(ptr: number, index: number): void;
-  /**
-   * assembly/index/set
-   * @param ptr `usize`
-   * @param index `f64`
-   */
-  export function set(ptr: number, index: number): void;
-  /**
-   * assembly/index/size
-   * @param ptr `usize`
-   * @returns `f64`
-   */
-  export function size(ptr: number): number;
-  /**
    * assembly/index/slice
    * @param ptr `usize`
    * @param start `f64`
@@ -90,12 +72,6 @@ declare namespace __AdaptedExports {
    * @returns `i32`
    */
   export function slice(ptr: number, start: number, end: number): number;
-  /**
-   * assembly/index/toggle
-   * @param ptr `usize`
-   * @param index `f64`
-   */
-  export function toggle(ptr: number, index: number): void;
   /**
    * assembly/index/toString
    * @param ptr `usize`

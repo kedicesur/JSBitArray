@@ -36,19 +36,23 @@ class BitView extends ArrayBufferView {
     super(U64_SIZE, alignof<u64>());
     this.length = l;
   }
-
-  get size() : u64 {
-    return <u64>this.byteLength << 3;
-  }
 }
 
-export function __release(ptr : usize) : void {
-  __unpin(ptr);
+export function __byteLength(ptr : usize) : i32 {
+  return changetype<BitView>(ptr).byteLength as i32;
+}
+
+export function __dataStart(ptr : usize) : i32 {
+  return changetype<BitView>(ptr).dataStart as i32;
+}
+
+export function __length(ptr : usize) : f64 {
+  return changetype<BitView>(ptr).length as f64;
 }
 
 export function new_BitView(l : f64) : i32 {
   const ba : BitView = new BitView(<u64>l);
-  return <i32>__pin(changetype<usize>(ba)) >>> 0;
+  return changetype<i32>(ba) >>> 0;
 }
 
 export function all(ptr : usize) : u8 {
@@ -92,24 +96,11 @@ export function any(ptr : usize) : u8 {
   return r ? 0 : 1;
 }
 
-export function at(ptr: usize, index: f64) : u8 {
-  const INDEX_U64 : u64   = <u64>index,
-        INNER_INDEX : u8  = <u8>(INDEX_U64 & 7),
-        BYTE_OFFSET : usize = <usize>INDEX_U64 >>> 3,
-        BITVIEW : BitView = changetype<BitView>(ptr);
-        
-  return load<u8>(BITVIEW.dataStart + BYTE_OFFSET) & (0x80 >>> INNER_INDEX);
-}
-
 export function compare(ptrA : usize, ptrB : usize) : i32 {
   const BITVIEW_A = changetype<BitView>(ptrA),
         BITVIEW_B = changetype<BitView>(ptrB);
   if (BITVIEW_A.byteLength !== BITVIEW_B.byteLength) throw new RangeError("Lengths are not equal..!");
   return memory.compare(BITVIEW_A.dataStart, BITVIEW_B.dataStart, BITVIEW_A.byteLength);
-}
-
-export function length(ptr : usize) : f64 {
-  return changetype<BitView>(ptr).length as f64;
 }
 
 export function not(ptr : usize) : i32 {
@@ -125,39 +116,12 @@ export function popcnt(ptr : usize) : f64 {
   let r : u64   = 0;
   
   for (let index : usize = BITVIEW.dataStart; index < END; index += 8) r += i64.popcnt(load<u64>(index));
-  return <f64>r;
-}
-
-export function reset(ptr : usize, index : f64) : void {
-  const INDEX_U64 : u64     = <u64>index,
-        INNER_INDEX : u8    = <u8>INDEX_U64 & 7,
-        BYTE_OFFSET : usize = <usize>(INDEX_U64 >>> 3),
-        BITVIEW : BitView   = changetype<BitView>(ptr),
-        BYTE_ADDR : usize   = BITVIEW.dataStart + BYTE_OFFSET;
-
-  store<u8>(BYTE_ADDR, load<u8>(BYTE_ADDR) & ~(0x80 >>> INNER_INDEX));
-}
-
-export function set(ptr : usize, index : f64) : void {
-  const INDEX_U64 : u64     = <u64>index,
-        INNER_INDEX : u8    = <u8>INDEX_U64 & 7,
-        BYTE_OFFSET : usize = <usize>INDEX_U64 >>> 3,
-        BITVIEW : BitView   = changetype<BitView>(ptr),
-        BYTE_ADDR : usize   = BITVIEW.dataStart + BYTE_OFFSET;
-
-  store<u8>(BYTE_ADDR, load<u8>(BYTE_ADDR) | (0x80 >>> INNER_INDEX));
-}
-
-export function size(ptr : usize) : f64 {
-  return changetype<BitView>(ptr).size as f64;
+  return r as f64;
 }
 
 export function slice(ptr : usize, start : f64, end : f64) : i32 {
-  const BITVIEW_A : BitView = changetype<BitView>(ptr);
-
-  if (end < 0) end = <f64>BITVIEW_A.length;
-  
-  const BITVIEW_R : BitView = new BitView(<u64>(end - start)),
+  const BITVIEW_A : BitView = changetype<BitView>(ptr),
+        BITVIEW_R : BitView = new BitView(<u64>(end - start)),
         COPY_START : usize  = BITVIEW_A.dataStart + (<u64>start >>> 6) as usize,
         BIT_OFFSET : u8     = (<u64>start & 63) as u8;
   let left : u64,
@@ -171,17 +135,6 @@ export function slice(ptr : usize, start : f64, end : f64) : i32 {
     store<u64>(BITVIEW_R.dataStart + cursor, left | right);
   }
   return changetype<i32>(BITVIEW_R) >>> 0;
-}
-
-export function toggle(ptr : usize, index : f64) : void {
-  const INDEX_U64 : u64   = <u64>index,
-        INNER_INDEX : u8  = <u8>(INDEX_U64 & 7),
-        BYTE_OFFSET : i32 = <i32>(INDEX_U64 >>> 3),
-        BITVIEW : BitView = changetype<BitView>(ptr),
-        BYTE_ADDR : usize = BITVIEW.dataStart + BYTE_OFFSET;
-
-  if (INDEX_U64 > BITVIEW.length) throw new RangeError("Index out of range");
-  store<u8>(BYTE_ADDR, load<u8>(BYTE_ADDR) ^ (0x80 >>> INNER_INDEX));
 }
 
 export function toString(ptr : usize) : string {
@@ -203,24 +156,3 @@ export function wipe(ptr : usize, val : u8) : void {
     default: for (let index : usize = BITVIEW.dataStart; index < END; index += 8) store<u64>(index, (<u64>(Math.random() * u32.MAX_VALUE) << 32) | <u32>(Math.random() * u32.MAX_VALUE)); 
   }
 }
-
-/*
-export function fromArrayBuffer(ab : ArrayBuffer) : i32 {
-  const bln : u32   = ab.byteLength,
-        ptr : usize = new BitView(bln * 8).ptr;
-  
-  let idx : u32 = 0;
-  
-  while (bln - idx > 7){
-    store<u64>(ptr+idx, dvw.getUint64(idx));
-    idx += 8;
-  }
-  while (idx < bln) {
-    store<u8>(ptr+0, dvw.getUint8(idx));
-    idx++;
-  }
-  return ptr as i32;
-}
-
-//export { randomnessTest , randomU64 };
-*/

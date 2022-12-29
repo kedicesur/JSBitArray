@@ -26,6 +26,7 @@ Deno.test( "BitArray_WASM Tests"
              mod.assertInstanceOf(ba,BA_WASM);
              mod.assertEquals(ba.length,10);
              ba.set(9);
+             console.log(`${ba}`);
              mod.assertEquals(ba.at(9),1);
              mod.assertEquals(ba.any(),true);
              mod.assert(ba.isEqual(ba.slice()));
@@ -39,24 +40,24 @@ Deno.test( "BitArray_WASM Tests"
 
 Deno.test( "BitArray Population Count"
          , function(){
-             let ba = new BA(1e6), // 415897
+             let ba = new BA(1e7), // 415897
                  l  = ba.length,
                  t  = 0;
-             for (let i = 0; i < l; i++) Math.random() > .5 && ( ba.set(i)
-                                                               , t++
-                                                               );
+             for (let i = 0; i < l; i++) Math.random() > .99 && ( ba.set(i)
+                                                                , t++
+                                                                );
              mod.assertEquals(ba.popcnt,t);
            }
          );
 
 Deno.test( "BitArray_WASM Population Count"
          , function(){
-             let ba = new BA_WASM(1e6),
+             let ba = new BA_WASM(1e7),
                  l  = ba.length,
                  t  = 0;
-             for (let i = 0; i < l; i++) Math.random() > .5 && ( ba.set(i)
-                                                               , t++
-                                                               );
+             for (let i = 0; i < l; i++) Math.random() > .99 && ( ba.set(i)
+                                                                , t++
+                                                                );
              mod.assertEquals(Number(ba.popcnt()),t);
            }
          );
@@ -66,7 +67,7 @@ Deno.test( "BitArray Sequential Set on Randomized BitArray"
              let ba = new BA(1e7), // 415897
                  l  = ba.length;
 
-             //ba.randomize();
+             ba.randomize();
              for (let i = 0; i < l; i++) ba.set(i);
              mod.assert(ba.all());
            }
@@ -77,7 +78,7 @@ Deno.test( "BitArray_WASM Sequential Set on Randomized BitArray"
              let ba = new BA_WASM(1e7), // 415897
                  l  = ba.length;
 
-             //ba.wipe(2);
+             ba.wipe(2);
              for (let i = 0; i < l; i++) ba.set(i);
              mod.assert(ba.all());
            }
@@ -85,28 +86,29 @@ Deno.test( "BitArray_WASM Sequential Set on Randomized BitArray"
 
 Deno.test( "BitArray Logical Operations"
          , function(){
-             let ba = new BA(1453),
-                 bb = new BA(1453),
-                 l  = ba.length;
+             const ba = new BA(1e7),
+                   bb = new BA(1e7),
+                   l  = ba.length;
              for (let i = 0; i < l; i++) i % 2 ? ba.set(i)
                                                : bb.set(i);
              mod.assert(ba.or(bb).all());
              mod.assert(ba.xor(bb).all());
              mod.assertFalse(ba.and(bb).any());
-             mod.assertEquals(ba.not().toString(), bb.toString());
+             //mod.assertEquals(ba.not().toString(), bb.toString());
            }
          );
 
 Deno.test( "BitArray_WASM Logical Operations"
          , function(){
-             let ba = new BA_WASM(1453),
-                 bb = new BA_WASM(1453),
-                 l  = ba.length;
+             const ba = new BA_WASM(1e7),
+                   bb = new BA_WASM(1e7),
+                   l  = ba.length;
              for (let i = 0; i < l; i++) i % 2 ? ba.set(i)
                                                : bb.set(i);
              mod.assert(ba.or(bb).all());
              mod.assert(ba.xor(bb).all());
              mod.assertFalse(ba.and(bb).any());
-             mod.assertEquals(ba.not().toString(), bb.toString());
+             //mod.assertEquals(ba.not().toString(), bb.toString());
+             //mod.assertEquals(ba.not().slice().toString(), bb.slice().toString());
            }
          );
