@@ -2,17 +2,19 @@
 
 Written by [Redu](https://stackoverflow.com/users/4543207/redu), with contributions by [Atriace](https://stackoverflow.com/users/923972/atriace) due to the question of ["How do I create a bit array in JavaScript"](https://stackoverflow.com/questions/6972717/how-do-i-create-bit-array-in-javascript/73993403#answer-73993403).
 
-This, v2.0 and onwards is a JavaScript class implementation of a `BitArray` built upon [AssemblyScript](https://www.assemblyscript.org/). It implements bit masks to access the bits which are technically stored under groups of 8 bytes `<u64>` in an `ArrayBufferView` structure.  Conveniently, it also offers [standard boolean operations](https://en.wikipedia.org/wiki/Bit_array#Basic_operations).
+The `BitArray` class, starting with version 2.0, is implemented in JavaScript and built using [AssemblyScript](https://www.assemblyscript.org/). It utilizes bit masks to access the bits stored in groups of 8 bytes, known as `<u64>`, within an `ArrayBufferView` structure. In addition, this class offers convenient standard boolean operations, as described on [Wikipedia](https://en.wikipedia.org/wiki/Bit_array#Basic_operations).
+
+
 
 ### **Benefits of BitArray**
 
-- `BitArray` is developed with a performance first approach in mind. Thanks to AssemblyScript, it's very fast. See [benchmarks](#benchmarks) below.
+- `BitArray` is developed with a focus on performance, and thanks to AssemblyScript, it's very fast. See the [benchmarks](#benchmarks) below for more information."
 
-- The memory footprint of `BitArray` is much smaller than any other type of arrays having the same number of binary elements.
+- `BitArray` has a much smaller memory footprint than other types of arrays that hold the same number of binary elements.
 
 ### **Constructor:** *BitArray(length)*
 
-* **`length`**: A positive integer [`Number`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number). In order to be able to deliver best performance, except for the indexed ones all properties or methods such as `.popcnt()`, `.all()`, `.wipe(number)`, `.and()` etc. use 64 bit access to the underlying `ArrayBuffer`. Accordingly the buffer is always set to minimum multiples of 8 bytes that is equal to or greater than the requested integer size. In theory `BitArray` should allow sizes up to 34,359,738,336 (`0x07ffffffe0`).
+* **`length`**: A positive integer [`Number`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number). To ensure optimal performance, most properties and methods in `BitArray`, such as `.popcnt()`, `.all()`, `.wipe(number)`, and `.and()`, use 64-bit access to the underlying ArrayBuffer. As a result, the buffer is always set to the minimum multiple of 8 bytes (64 bits) that is equal to or greater than the requested integer size. In theory, `BitArray` should support sizes up to 34,359,738,336 (0x07ffffffe0)..
 
 ### **Syntax**
 
@@ -36,8 +38,13 @@ a.popcnt();          // 2
 
 
 ### **Properties**
+
 * **`length : number`**: An immutable property returning the actual length of the `BitArray`.
+* **`dataView : DataView`**: The `dataView` property of `BitArray` is an instance of a class that extends the standard `DataView` object. However, for safety reasons, this class does not expose the underlying `ArrayBuffer` through the `buffer` property. Despite this, it is fully suitable for accessing and manipulating the `BitArray` using `DataView` prototype methods such as `setUint8()`, `getInt32()`, etc.
+
+
 ### **Methods**
+
 #### Tests
 * **`.all() : boolean`**: Returns `true` if all bits in the `BitArray` are set.
 
@@ -100,21 +107,25 @@ b.and(a);  // 0000000010
   - `.wipe()` or `.wipe(0)` fills the `BitArray` with 0.
   - `.wipe(1)` fills the `BitArray` with 1.
   - `.wipe(2+)` fills the `BitArray` with random bits.
+
 #### Others
+
 * **`.slice(a = 0, b = this.length) : BitArray`**: Slices `BitArray` and returns a new `BitArray`. When invoked with no arguments, the default argument values instantiate a clone. No negative values are allowed.
 * **`.toString() : string`**: Returns the string representation of the `BitArray`.
 
 ### **Benchmarks**
 
-We bench a meaningful usecase of `BitArray` employed in an Optimized Segmented Sieve of Sundaram based single threaded `PI` function which returns the count of prime numbers up to a number `n`. Tests are run for `0` to `1000000` (`1e6`) for `Array`, `BitArray` (No WASM), `BitArrayWASM` and `Uint8Array`. Benchmarking is done by Deno's built in benchmarking tool. So just run
+We demonstrate a meaningful use case for the `BitArray` class in an optimized segmented Sieve of Sundaram algorithm for finding the number of prime numbers up to a given number `n`. This single threaded `PI` function has been tested for `n` values ranging from `0` to `1000000` (`1e6`) using `Array`, `BitArray` (without WASM), `BitArrayWASM`, and `Uint8Array`. The benchmarking was performed using Deno's built-in benchmarking tool.
+
+So just run
 
 **`/path-to-project$`** `deno bench --unstable`
 
 at the root of the project to see it for yourself.
 
-Benchmark                  |  Time (avg)  |    (min ... max)    | p75     | p99     | p995
-|--------------------------|--------------|---------------------|---------|---------|--------
-Array__________: 0-1000000 | 6.67 ms/iter | (6.51 ms … 6.98 ms) | 6.71 ms | 6.98 ms | 6.98 ms
-BitArray_______: 0-1000000 | 6.63 ms/iter | (6.4 ms … 7.48 ms)  | 6.69 ms | 7.48 ms | 7.48 ms
-BitArrayWASM: 0-1000000    | 4.97 ms/iter | (4.79 ms … 5.31 ms) |    5 ms | 5.22 ms | 5.31 ms
-Uint8Array____: 0-1000000  | 6.06 ms/iter | (5.86 ms … 7.62 ms) | 6.07 ms | 7.62 ms | 7.62 ms
+Benchmark|Time (avg)|(min ... max)|p75|p99|p995
+|:------:|:--------:|:-----------:|:-:|:-:|:-:
+**Array&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :** 0-1000000|6.67 ms/iter|(6.51 ms … 6.98 ms)|6.71 ms|6.98 ms|6.98 ms
+**BitArray&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :** 0-1000000|6.63 ms/iter|(6.4 ms … 7.48 ms) |6.69 ms|7.48 ms|7.48 ms
+**BitArrayWASM :** 0-1000000|4.93 ms/iter|(4.79 ms … 5.22 ms)|   5.01 ms|5.12 ms|5.22 ms
+**Uint8Array&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :** 0-1000000 |6.06 ms/iter|(5.86 ms … 7.62 ms)|6.07 ms|7.62 ms|7.62 ms

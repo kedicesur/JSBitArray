@@ -6,7 +6,7 @@
     "workbench.preferredDarkColorTheme": "Monokai Dimmed",
     "editor.fontFamily": "'Hasklig', 'Droid Sans Mono', 'monospace', monospace",
     "editor.fontLigatures": true,
-    "editor.fontSize": 12,
+    "editor.fontSize": 14,
     "editor.autoIndent": "advanced",
     "editor.guides.highlightActiveIndentation": true,
     "editor.guides.indentation": false,

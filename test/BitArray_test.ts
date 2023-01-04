@@ -112,3 +112,19 @@ Deno.test( "BitArray_WASM Logical Operations"
              //mod.assertEquals(ba.not().slice().toString(), bb.slice().toString());
            }
          );
+
+Deno.test( "BitArray_WASM dataView Access"
+         , function(){
+             const ba = new BA_WASM(1024),
+                   dv = ba.dataView;
+
+             for (let i = 0; i < dv.byteLength; i++) dv.setUint8(i,255);
+             mod.assert(ba.all());
+             for (let i = 0; i < dv.byteLength; i++) dv.setUint8(i,0b10101010);
+             mod.assertEquals(ba.popcnt(),512);
+             ba.wipe(0);
+             ba.dataView.setUint32(0,1);
+             mod.assertEquals(ba.at(31),1);
+             mod.assertEquals(ba.popcnt(),1);
+           }
+         );

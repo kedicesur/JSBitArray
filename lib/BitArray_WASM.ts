@@ -8,11 +8,25 @@ function __garbage(ptr : number) : void {
   BV.__unpin(ptr);
 }
 
+class DV extends DataView {
+  constructor(buffer : ArrayBuffer, byteOffset : number, byteLength : number) {
+    super(buffer, byteOffset, byteLength);
+    Object.defineProperty( this
+                         , 'buffer'
+                         , { enumerable: false
+                           , writable  : false
+                           , value     : null
+                           }
+                         );
+  }
+}
+
 export class BitArray {
   private ptr : number;
   private view : DataView;
   readonly length : number;
-  constructor(n : number, fromWASM : boolean = false){
+
+  constructor(n : number, fromWASM : boolean = false) {
     this.ptr = fromWASM ? n
                         : BV.new_BitView(n);
     this.length = fromWASM ? BV.__length(this.ptr)
@@ -20,6 +34,10 @@ export class BitArray {
     this.view = new DataView(BV.memory.buffer,BV.__dataStart(this.ptr),BV.__byteLength(this.ptr));
     BV.__pin(this.ptr);
     FR.register(this, this.ptr);
+  }
+
+  get dataView() : DataView {
+    return new DV(BV.memory.buffer,BV.__dataStart(this.ptr),BV.__byteLength(this.ptr));
   }
 
   all() : boolean {
