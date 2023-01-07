@@ -1,0 +1,44 @@
+{
+  "name": "bit-array",
+  "version": "1.0.0",
+  "description": "An  eEfficient BitArray implementation for JS.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node tests",
+    "asbuild:debug": "asc assembly/index.ts --target debug",
+    "asbuild:release": "asc assembly/index.ts --target release",
+    "asbuild": "npm run asbuild:debug && npm run asbuild:release",
+    "start": "npx serve ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://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@github.com/kedicesur/JSBitArray.git"
+  },
+  "keywords": [
+    "BitArray",
+    "bit-array",
+    "bit-array-wasm",
+    "bitarray",
+    "bitarraywasm"
+  ],
+  "author": "Ömer Kaşdarma",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kedicesur/JSBitArray/issues"
+  },
+  "homepage": "https://github.com/kedicesur/JSBitArray#readme",
+  "devDependencies": {
+    "assemblyscript": "^0.26.0"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./build/release.js",
+      "types": "./build/release.d.ts"
+    }
+  }
+}

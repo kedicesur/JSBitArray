@@ -1,4 +1,4 @@
-import {default as BA} from "../test/BitArray.ts"
+import { BA } from "../mod.ts";
 
 export function pi(start : number, end : number) : number {
   
@@ -29,16 +29,14 @@ export function pi(start : number, end : number) : number {
           }
         }
       }
-    return g - a.popcnt;
+    return g - a.popcnt();
   }
   
   end   % 2 && end--;             // make end even
   start % 2 && start--;           // make start even
   
   let n  = end - start,
-      cs = n < 2e6 ? 5e3   :      // chunk size
-           n < 2e7 ? 5e4   :
-                     3e6,
+      cs = n,
       cc = Math.floor(n/cs),      // chunk count
       xs = n % cs,                // excess after last chunk
       pc = 0;                     // prime count
