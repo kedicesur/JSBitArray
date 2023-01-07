@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/kedicesur/JSBitArray#readme",
   "devDependencies": {
-    "assemblyscript": "^0.25.0"
+    "assemblyscript": "^0.26.0"
   },
   "type": "module",
   "exports": {

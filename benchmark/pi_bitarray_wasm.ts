@@ -1,4 +1,4 @@
-import { BitArray as BA_WASM } from "../lib/BitArray_WASM.ts";
+import { BA } from "../mod.ts";
 
 export function pi(start : number, end : number) : number {
   
@@ -6,7 +6,7 @@ export function pi(start : number, end : number) : number {
     let t = (Math.sqrt(4+8*(g+o))-2)/4,
         e = 0,
         s = 0,
-        a = new BA_WASM(g),
+        a = new BA(g),
         c = 0,
         l = o ? (g+o-1)/3
               : (g-1)/3;

@@ -1,4 +1,4 @@
-import {BA} from "../mod.ts"
+import {default as BA} from "../test/BitArray.ts"
 
 export function pi(start : number, end : number) : number {
   

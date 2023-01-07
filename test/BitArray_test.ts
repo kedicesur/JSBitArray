@@ -1,11 +1,11 @@
 import * as mod from "https://deno.land/std@0.162.0/testing/asserts.ts";
+import { default as BAJS } from "./BitArray.ts";
 import { BA } from "../mod.ts";
-import { BitArray as BA_WASM } from "../lib/BitArray_WASM.ts";
 
 Deno.test( "BitArray Tests"
          , function(){
-             const ba = new BA(10);
-             mod.assertInstanceOf(ba,BA);
+             const ba = new BAJS(10);
+             mod.assertInstanceOf(ba,BAJS);
              mod.assertEquals(ba.length,32);
              mod.assertEquals(ba.size,10);
              ba.set(9);
@@ -22,11 +22,11 @@ Deno.test( "BitArray Tests"
 
 Deno.test( "BitArray_WASM Tests"
          , function(){
-             const ba = new BA_WASM(10);
-             mod.assertInstanceOf(ba,BA_WASM);
+             const ba = new BA(10);
+             mod.assertInstanceOf(ba,BA);
              mod.assertEquals(ba.length,10);
              ba.set(9);
-             console.log(`${ba}`);
+             //console.log(`${ba}`);
              mod.assertEquals(ba.at(9),1);
              mod.assertEquals(ba.any(),true);
              mod.assert(ba.isEqual(ba.slice()));
@@ -40,7 +40,7 @@ Deno.test( "BitArray_WASM Tests"
 
 Deno.test( "BitArray Population Count"
          , function(){
-             let ba = new BA(1e7), // 415897
+             let ba = new BAJS(1e7), // 415897
                  l  = ba.length,
                  t  = 0;
              for (let i = 0; i < l; i++) Math.random() > .99 && ( ba.set(i)
@@ -52,7 +52,7 @@ Deno.test( "BitArray Population Count"
 
 Deno.test( "BitArray_WASM Population Count"
          , function(){
-             let ba = new BA_WASM(1e7),
+             let ba = new BA(1e7),
                  l  = ba.length,
                  t  = 0;
              for (let i = 0; i < l; i++) Math.random() > .99 && ( ba.set(i)
@@ -64,7 +64,7 @@ Deno.test( "BitArray_WASM Population Count"
 
 Deno.test( "BitArray Sequential Set on Randomized BitArray"
          , function(){
-             let ba = new BA(1e7), // 415897
+             let ba = new BAJS(1e7), // 415897
                  l  = ba.length;
 
              ba.randomize();
@@ -75,7 +75,7 @@ Deno.test( "BitArray Sequential Set on Randomized BitArray"
 
 Deno.test( "BitArray_WASM Sequential Set on Randomized BitArray"
          , function(){
-             let ba = new BA_WASM(1e7), // 415897
+             let ba = new BA(1e7), // 415897
                  l  = ba.length;
 
              ba.wipe(2);
@@ -86,8 +86,8 @@ Deno.test( "BitArray_WASM Sequential Set on Randomized BitArray"
 
 Deno.test( "BitArray Logical Operations"
          , function(){
-             const ba = new BA(1e7),
-                   bb = new BA(1e7),
+             const ba = new BAJS(1e7),
+                   bb = new BAJS(1e7),
                    l  = ba.length;
              for (let i = 0; i < l; i++) i % 2 ? ba.set(i)
                                                : bb.set(i);
@@ -100,8 +100,8 @@ Deno.test( "BitArray Logical Operations"
 
 Deno.test( "BitArray_WASM Logical Operations"
          , function(){
-             const ba = new BA_WASM(1e7),
-                   bb = new BA_WASM(1e7),
+             const ba = new BA(1e7),
+                   bb = new BA(1e7),
                    l  = ba.length;
              for (let i = 0; i < l; i++) i % 2 ? ba.set(i)
                                                : bb.set(i);
@@ -113,9 +113,9 @@ Deno.test( "BitArray_WASM Logical Operations"
            }
          );
 
-Deno.test( "BitArray_WASM dataView Access"
+Deno.test( "BitArray_WASM Host Side .dataView Access"
          , function(){
-             const ba = new BA_WASM(1024),
+             const ba = new BA(1024),
                    dv = ba.dataView;
 
              for (let i = 0; i < dv.byteLength; i++) dv.setUint8(i,255);

@@ -1,12 +1,12 @@
 //import * as mod from "https://deno.land/std@0.162.0/testing/asserts.ts";
-import { BitArray as BA_WASM } from "../lib/BitArray_WASM.ts";
 import { BA } from "../mod.ts";
+import { default as BAJS } from "./BitArray.ts";
 import { pi } from "../benchmark/pi_array.ts"
 
 //8589934400
 
-let ba      = new BA(1e6),
-    ba_wasm = new BA_WASM(1e6),
+let ba      = new BAJS(1e6),
+    ba_wasm = new BA(1e6),
     pc      = 0;
 console.time("randomize wasm");
 ba_wasm.wipe(2);
@@ -24,8 +24,8 @@ pc = ba.popcnt;
 console.timeEnd("popcnt");
 console.log(pc);
 
-const a = new BA_WASM(10),
-      b = new BA_WASM(37);
+const a = new BA(10),
+      b = new BA(37);
 
 a.set(7);
 a.set(8);
