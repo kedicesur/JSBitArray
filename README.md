@@ -5,21 +5,41 @@ Written by [Redu](https://stackoverflow.com/users/4543207/redu), with contributi
 The `BitArray` class, starting with version 2.0, is implemented in JavaScript and built using [AssemblyScript](https://www.assemblyscript.org/). It utilizes bit masks to access the bits stored in groups of 8 bytes, known as `<u64>`, within an `ArrayBufferView` structure. In addition, this class offers convenient standard boolean operations, as described on [Wikipedia](https://en.wikipedia.org/wiki/Bit_array#Basic_operations).
 
 
-
 ### **Benefits of BitArray**
 
-- `BitArray` is developed with a focus on performance, and thanks to AssemblyScript, it's very fast. See the [benchmarks](#benchmarks) below for more information."
+- `BitArray` is developed with a focus on performance, and thanks to AssemblyScript, it's very fast. See the [benchmarks](#benchmarks) below for more information.
 
 - `BitArray` has a much smaller memory footprint than other types of arrays that hold the same number of binary elements.
 
 ### **Constructor:** *BitArray(length)*
 
-* **`length`**: A positive integer [`Number`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number). To ensure optimal performance, most properties and methods in `BitArray`, such as `.popcnt()`, `.all()`, `.wipe(number)`, and `.and()`, use 64-bit access to the underlying ArrayBuffer. As a result, the buffer is always set to the minimum multiple of 8 bytes (64 bits) that is equal to or greater than the requested integer size. In theory, `BitArray` should support sizes up to 34,359,738,336 (0x07ffffffe0)..
+* **`length`**: A positive integer [`Number`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number). To ensure optimal performance, most properties and methods in `BitArray`, such as `.popcnt()`, `.all()`, `.wipe(number)`, and `.and()`, use 64-bit access to the underlying `ArrayBuffer`. As a result, the buffer is always set to the minimum multiple of 8 bytes (64 bits) that is equal to or greater than the requested integer size. In theory, `BitArray` should support sizes up to 34,359,738,336 (`0x07ffffffe0`).
+
+### **Installation**
+
+With [Deno](https://deno.land/) you can directly import the `BitArray` package from the [Third Party Modules](https://deno.land/x/bit_array@v2.0.0) like
+
+
+```javascript
+import { BA } from "https://deno.land/x/bit_array@v2.0.0/mod.ts"
+```
+
+or from the [`BitArray` GitHub repository](https://github.com/kedicesur/JSBitArray) like
+
+```javascript
+import { BA } from "https://raw.githubusercontent.com/kedicesur/JSBitArray/v2.0.0/mod.ts"
+```
+
+Working with Node or Bun you can clone the [`BitArray` Repo](https://github.com/kedicesur/JSBitArray) in your project folder and do like 
+
+```javascript
+import { BA } from "./JSBitArray/mod.ts"
+```
 
 ### **Syntax**
 
 ```javascript
-new BitArray(length : number);
+new BA(length : number);
 ```
 
 ### **Examples**
@@ -27,7 +47,7 @@ new BitArray(length : number);
 Starting with something simple...
 
 ```javascript
-var a = new BitArray(10);
+var a = new BA(10);
 a.set(0);
 a.set(3);
 
@@ -49,7 +69,7 @@ a.popcnt();          // 2
 * **`.all() : boolean`**: Returns `true` if all bits in the `BitArray` are set.
 
 ```javascript
-var a = new BitArray(10);
+var a = new BA(10);
 a.wipe(1); // 1111111111
 a.all();   // true
 a.reset(7);// 1111111011
@@ -59,7 +79,7 @@ a.all();   // false
 * **`.any() : boolean`**: Returns `true` if any of the bits in the `BitArray` are set. If returns `false` then all bits are 0.
 
 ```javascript
-var a = new BitArray(10);
+var a = new BA(10);
 a.any();   // false
 a.set(7);  // 0000000100
 a.any();   // true 
@@ -68,7 +88,7 @@ a.any();   // true
 * **`.isEqual() : boolean`**: Returns `true` if tested `BitArray`s have the same bits set.
 
 ```javascript
-var a = new BitArray(10),
+var a = new BA(10),
     b;
 a.wipe(2);     // 1000111100 (randomly set bits)
 b = a.slice(); // 1000111100
@@ -79,8 +99,8 @@ a.isEqual(b);  // true
 * **`.and(bar : BitArray)`**: And of `this` and `bar`. Example: 1100 & 1001 = 1000 returned as a new `BitArray`.
 
 ```javascript
-var a = new BitArray(10),
-    b = new BitArray(37),
+var a = new BA(10),
+    b = new BA(37),
     c;
 
 a.length;  // 10
