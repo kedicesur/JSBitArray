@@ -2,7 +2,7 @@
 
 Written by [Redu](https://stackoverflow.com/users/4543207/redu), with contributions by [Atriace](https://stackoverflow.com/users/923972/atriace) due to the question of ["How do I create a bit array in JavaScript"](https://stackoverflow.com/questions/6972717/how-do-i-create-bit-array-in-javascript/73993403#answer-73993403).
 
-The `BitArray` class, starting with version 2.0, is implemented in JavaScript and built using [AssemblyScript](https://www.assemblyscript.org/). It utilizes bit masks to access the bits stored in groups of 8 bytes, known as `<u64>`, within an `ArrayBufferView` structure. In addition, this class offers convenient standard boolean operations, as described on [Wikipedia](https://en.wikipedia.org/wiki/Bit_array#Basic_operations).
+The `BitArray` class, starting with version 2.0.0, is implemented in JavaScript and built using [AssemblyScript](https://www.assemblyscript.org/). It utilizes bit masks to access the bits stored in groups of 8 bytes, known as `<u64>`, within an `ArrayBufferView` structure. In addition, this class offers convenient standard boolean operations, as described on [Wikipedia](https://en.wikipedia.org/wiki/Bit_array#Basic_operations).
 
 
 ### **Benefits of BitArray**
@@ -96,7 +96,7 @@ a.isEqual(b);  // true
 ```
 
 #### Logical Operators
-* **`.and(bar : BitArray)`**: And of `this` and `bar`. Example: 1100 & 1001 = 1000 returned as a new `BitArray`.
+* **`.and(bar : BA)`**: And of `this` and `bar`. Example: 1100 & 1001 = 1000 returned as a new `BitArray`.
 
 ```javascript
 var a = new BA(10),
@@ -114,23 +114,23 @@ a.and(b);  // 0000000010
 b.and(a);  // 0000000010
 ```
 
-* **`.not() : BitArray`**: Returns a new `BitArray` with all bits flipped. Example: 1100 = 0011.
-* **`.or(bar : BitArray) : BitArray`**: Or of this and bar. Example: 1100 & 1001 = 1101 returned as a new `BitArray`.
-* **`.xor(bar : BitArray) : BitArray`**: Xor of this and bar. Example: 1100 & 1001 = 0101 returned as a new `BitArray`.
+* **`.not() : BA`**: Returns a new `BitArray` with all bits flipped. Example: 1100 = 0011.
+* **`.or(bar : BA) : BitArray`**: Or of this and bar. Example: 1100 & 1001 = 1101 returned as a new `BitArray`.
+* **`.xor(bar : BA) : BitArray`**: Xor of this and bar. Example: 1100 & 1001 = 0101 returned as a new `BitArray`.
 
 #### In Place Modifiers
 
-* **`.reset(i : number) : BitArray`**: Resets the value at given index `i`.
-* **`.set(i : number) : BitArray`**: Sets the value at given index `i`.
-* **`.toggle(i : number) : BitArray`**: Flips the value at given index `i`.
-* **`.wipe(n : number = 0) : BitArray`**:
+* **`.reset(i : number) : BA`**: Resets the value at given index `i`.
+* **`.set(i : number) : BA`**: Sets the value at given index `i`.
+* **`.toggle(i : number) : BA`**: Flips the value at given index `i`.
+* **`.wipe(n : number = 0) : BA`**:
   - `.wipe()` or `.wipe(0)` fills the `BitArray` with 0.
   - `.wipe(1)` fills the `BitArray` with 1.
   - `.wipe(2+)` fills the `BitArray` with random bits.
 
 #### Others
 
-* **`.slice(a = 0, b = this.length) : BitArray`**: Slices `BitArray` and returns a new `BitArray`. When invoked with no arguments, the default argument values instantiate a clone. No negative values are allowed.
+* **`.slice(a = 0, b = this.length) : BA`**: Slices `BitArray` and returns a new `BitArray`. When invoked with no arguments, the default argument values instantiate a clone. No negative values are allowed.
 * **`.toString() : string`**: Returns the string representation of the `BitArray`.
 
 ### **Benchmarks**

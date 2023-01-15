@@ -1,6 +1,6 @@
 {
   "name": "bit-array",
-  "version": "1.0.0",
+  "version": "2.0.1",
   "description": "An  eEfficient BitArray implementation for JS.",
   "main": "index.js",
   "directories": {
@@ -20,6 +20,7 @@
   },
   "keywords": [
     "BitArray",
+    "BitArrayWASM",
     "bit-array",
     "bit-array-wasm",
     "bitarray",
