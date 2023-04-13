@@ -1,6 +1,6 @@
 {
   "name": "bit-array",
-  "version": "1.0.0",
+  "version": "2.0.1",
   "description": "An  eEfficient BitArray implementation for JS.",
   "main": "index.js",
   "directories": {
@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/kedicesur/JSBitArray#readme",
   "devDependencies": {
-    "assemblyscript": "^0.26.0"
+    "assemblyscript": "^0.27.0"
   },
   "type": "module",
   "exports": {

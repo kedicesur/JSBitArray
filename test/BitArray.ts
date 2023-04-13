@@ -17,7 +17,7 @@ export default class BitArray extends DataView implements BA {
   }
 
   static from(a : unknown[] | ArrayBufferView) : BitArray {
-    return Array.isArray(a) ? a.reduce((ba,e,i) => (!!e && ba.set(i), ba), new BitArray(a.length))
+    return Array.isArray(a) ? a.reduce((ba: BitArray,e,i) => (!!e && ba.set(i), ba), new BitArray(a.length))
                             : new BitArray (a.buffer);
   }
 
