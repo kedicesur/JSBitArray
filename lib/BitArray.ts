@@ -22,8 +22,8 @@ export default class BitArray extends DataView implements BA {
   }
 
   constructor(sizeOrBuffer : number | ArrayBuffer) {
-    let err : (e : string) => never = e => {throw new Error(e);},
-        arr : Uint8Array,
+    const err : (e : string) => never = e => {throw new Error(e);};
+    let arr : Uint8Array,
         buf : ArrayBuffer,
         siz = 0;
 
@@ -172,7 +172,7 @@ export default class BitArray extends DataView implements BA {
     return new Uint8Array(this.buffer).reduce((p,c) => p + c.toString(2).padStart(8,"0"),"");
   }
 
-  wipe(b : boolean = false) : BitArray {
+  wipe(b = false) : BitArray {
   // Sets the BitArray in place
     const val = b ? 0xffffffff : 0;
     for (let i = 0, len = this.buffer.byteLength; i < len; i += 4) this.setUint32(i, val);
