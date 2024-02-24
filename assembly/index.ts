@@ -116,7 +116,8 @@ export function popcnt(ptr : usize) : f64 {
   let r : u64   = 0;
   
   for (let index : usize = BITVIEW.dataStart; index < END; index += 8) r += i64.popcnt(load<u64>(index));
-  return r as f64;
+       
+  return r >>> 0 as f64;
 }
 
 export function slice(ptr : usize, start : f64, end : f64) : i32 {
@@ -142,7 +143,7 @@ export function toString(ptr : usize) : string {
         FIRST_WORD : u64   = load<u64>(BITVIEW.dataStart),
         LAST_WORD : u64    = load<u64>(BITVIEW.dataStart + BITVIEW.byteLength - 8),
         START_STR : string = bswap<u64>(FIRST_WORD).toString(2).padStart(64,"0").slice(0, <i32>min(BITVIEW.length, 64)),
-        MID_STR : string   = BITVIEW.length > 128 ? `.. ${(BITVIEW.byteLength >>> 3) - 2 << 6} more bits ..` : "",
+        MID_STR : string   = BITVIEW.length > 128 ? `.. ${<u64>(BITVIEW.length - 64 - (BITVIEW.length & 63 || 64))}  more bits before ..` : "", //${(BITVIEW.byteLength / 8) - 2 << 6} 
         END_STR : string   = BITVIEW.length > 64 ? bswap<u64>(LAST_WORD).toString(2).padStart(64,"0").slice(0, <i32>BITVIEW.length & 63 || 64) : "";
   return  START_STR + MID_STR + END_STR;
 }
@@ -152,7 +153,7 @@ export function wipe(ptr : usize, val : u8) : void {
         END : usize       = BITVIEW.dataStart + BITVIEW.byteLength;
   switch (val){
     case 0 : memory.fill(BITVIEW.dataStart, u8.MIN_VALUE, BITVIEW.byteLength); break;
-    case 1 : memory.fill(BITVIEW.dataStart, u8.MAX_VALUE, BITVIEW.byteLength); break;
+    case 1 : memory.fill(BITVIEW.dataStart, u8.MAX_VALUE, BITVIEW.byteLength); break; // Check why this breaks when size >= 2**32 - 64
     default: for (let index : usize = BITVIEW.dataStart; index < END; index += 8) store<u64>(index, (<u64>(Math.random() * u32.MAX_VALUE) << 32) | <u32>(Math.random() * u32.MAX_VALUE)); 
   }
 }

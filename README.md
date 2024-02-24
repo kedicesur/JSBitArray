@@ -2,14 +2,16 @@
 
 Written by [Redu](https://stackoverflow.com/users/4543207/redu), with contributions by [Atriace](https://stackoverflow.com/users/923972/atriace) due to the question of ["How do I create a bit array in JavaScript"](https://stackoverflow.com/questions/6972717/how-do-i-create-bit-array-in-javascript/73993403#answer-73993403).
 
-The `BitArray` class, starting with version 2.0, is implemented in JavaScript and built using [AssemblyScript](https://www.assemblyscript.org/). It utilizes bit masks to access the bits stored in groups of 8 bytes, known as `<u64>`, within an `ArrayBufferView` structure. In addition, this class offers convenient standard boolean operations, as described on [Wikipedia](https://en.wikipedia.org/wiki/Bit_array#Basic_operations).
+The `BitArray` class, starting with version 2.0, is implemented in TypeScript and built using [AssemblyScript](https://www.assemblyscript.org/). However it's JS compiled version is also available for the web.
+
+BitArray utilizes bit masks to access the bits stored in groups of 8 bytes, known as `<u64>`, within an `ArrayBufferView` structure. In addition, this class offers convenient standard boolean operations, as described on [Wikipedia](https://en.wikipedia.org/wiki/Bit_array#Basic_operations).
 
 
 ### **Benefits of BitArray**
 
-- `BitArray` is developed with a focus on performance, and thanks to AssemblyScript, it's very fast. See the [benchmarks](#benchmarks) below for more information.
+- `BitArray` is developed with a focus on performance, and thanks to AssemblyScript WASM, it's very fast. See the [benchmarks](#benchmarks) below for more information.
 
-- `BitArray` has a much smaller memory footprint than other types of arrays that hold the same number of binary elements.
+- `BitArray` has a much smaller memory footprint compared to other types of arrays that hold the same number of boolean elements.
 
 ### **Constructor:** *BitArray(length)*
 
@@ -17,17 +19,17 @@ The `BitArray` class, starting with version 2.0, is implemented in JavaScript an
 
 ### **Installation**
 
-With [Deno](https://deno.land/) you can directly import the `BitArray` package from the [Third Party Modules](https://deno.land/x/bit_array@v2.0.0) like
+With [Deno](https://deno.land/) you can directly import the `BitArray` package from the [Third Party Modules](https://deno.land/x/bit_array@v2.0.2) like
 
 
 ```javascript
-import { BA } from "https://deno.land/x/bit_array@v2.0.0/mod.ts"
+import { BA } from "https://deno.land/x/bit_array@v2.0.2/mod.ts"
 ```
 
-or from the [`BitArray` GitHub repository](https://github.com/kedicesur/JSBitArray) like
+For JS environments like Web browsers from the [`BitArray` GitHub repository](https://github.com/kedicesur/JSBitArray) like
 
 ```javascript
-import { BA } from "https://raw.githubusercontent.com/kedicesur/JSBitArray/v2.0.0/mod.ts"
+import { BA } from "https://raw.githubusercontent.com/kedicesur/JSBitArray/v2.0.2/mod.js"
 ```
 
 Working with Node or Bun you can clone the [`BitArray` Repo](https://github.com/kedicesur/JSBitArray) in your project folder and do like 
@@ -135,17 +137,17 @@ b.and(a);  // 0000000010
 
 ### **Benchmarks**
 
-We demonstrate a meaningful use case for the `BitArray` class in an optimized segmented Sieve of Sundaram algorithm for finding the number of prime numbers up to a given number `n`. This single threaded `PI` function has been tested for `n` values ranging from `0` to `1000000` (`1e6`) using `Array`, `BitArray` (without WASM), `BitArrayWASM`, and `Uint8Array`. The benchmarking was performed using Deno's built-in benchmarking tool.
+We demonstrate a meaningful use case for the `BitArray` class in an optimized segmented Sieve of Sundaram algorithm for finding the number of prime numbers up to a given number `n`. While this single threaded `PI` function is still in pure JS it is tested against using 4 different array  structures for `n` values ranging from `0` to `1000000` (`1e6`). `Array`, `BitArray` (without WASM), `BitArrayWASM`, and `Uint8Array`. The benchmarking was performed using Deno's built-in benchmarking tool.
 
 So just run
 
 **`/path-to-project$`** `deno bench --unstable`
 
-at the root of the project to see it for yourself.
+at the root of the project to see it for yourself that this BitArray WASM implementation is around 20% faster by using only 12.5% of the memory footprint compared to native JS array structures.
 
 Benchmark|Time (avg)|(min ... max)|p75|p99|p995
 |:------:|:--------:|:-----------:|:-:|:-:|:-:
-**Array&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :** 0-1000000|6.67 ms/iter|(6.51 ms … 6.98 ms)|6.71 ms|6.98 ms|6.98 ms
-**BitArray&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :** 0-1000000|6.63 ms/iter|(6.4 ms … 7.48 ms) |6.69 ms|7.48 ms|7.48 ms
-**BitArrayWASM :** 0-1000000|4.93 ms/iter|(4.79 ms … 5.22 ms)|   5.01 ms|5.12 ms|5.22 ms
-**Uint8Array&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :** 0-1000000 |6.06 ms/iter|(5.86 ms … 7.62 ms)|6.07 ms|7.62 ms|7.62 ms
+<span style="font-size: smaller;">**Array&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :** 0-1000000</span>|<span style="font-size: smaller;">6.67 ms/iter</span>|<span style="font-size: smaller;">(6.51 ms … 6.98 ms)</span>|<span style="font-size: smaller;">6.71 ms</span>|<span style="font-size: smaller;">6.98 ms</span>|<span style="font-size: smaller;">6.98 ms</span>
+<span style="font-size: smaller;">**BitArray&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :** 0-1000000</span>|<span style="font-size: smaller;">6.63 ms/iter</span>|<span style="font-size: smaller;">(6.4 ms … 7.48 ms)</span>|<span style="font-size: smaller;">6.69 ms</span>|<span style="font-size: smaller;">7.48 ms</span>|<span style="font-size: smaller;">7.48 ms</span>
+<span style="font-size: smaller;">**BitArrayWASM :** 0-1000000</span>|<span style="font-size: smaller;">4.93 ms/iter</span>|<span style="font-size: smaller;">(4.79 ms … 5.22 ms)</span>|<span style="font-size: smaller;">5.01 ms</span>|<span style="font-size: smaller;">5.12 ms</span>|<span style="font-size: smaller;">5.22 ms</span>
+<span style="font-size: smaller;">**Uint8Array&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :** 0-1000000</span>|<span style="font-size: smaller;">6.06 ms/iter</span>|<span style="font-size: smaller;">(5.86 ms … 7.62 ms)</span>|<span style="font-size: smaller;">6.07 ms</span>|<span style="font-size: smaller;">7.62 ms</span>|<span style="font-size: smaller;">7.62 ms</span>

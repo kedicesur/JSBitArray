@@ -79,7 +79,7 @@ export default class BitArray {
   }
 
   popcnt() : number {
-    return BV.popcnt(this.ptr) >>> 0;
+    return BV.popcnt(this.ptr);
   }
 
   reset(i : number) : BitArray {

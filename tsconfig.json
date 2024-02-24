@@ -1,0 +1,8 @@
+{ "include": [ "./*.ts"
+             , "./lib/*.ts"
+             ]
+, "compilerOptions": { "target": "es2022"
+                     , "module": "Node16"
+                     , "moduleResolution": "Node16"
+                     }
+}

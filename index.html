@@ -2,11 +2,14 @@
 <html lang="en">
 <head>
 <script type="module">
-import * as BA_WASM from "./build/release.js";
-var ba = BA_WASM.new_BitArray(8589934400);
-BA_WASM.randomize(ba);
-document.getElementsByTagName("body")[0].textContent = `Population count of ${BA_WASM.size} is ${BA_WASM.popcount(ba)}`; // and the string representation of the BitArray is ${BA_WASM.toString(ba)}
+ import { BA } from "https://raw.githubusercontent.com/kedicesur/JSBitArray/v2.0.2/mod.js";
+const ba = new BA(8589934400); //8589934400
+let pc;
+    
+ba.wipe(2);
+document.getElementsByTagName("body")[0].textContent = `Population count of BitArray [${ba.toString()}] with size ${ba.length} is ${pc = ba.popcnt()} and the ratio is ${(pc/ba.length*100).toFixed(4)}. The bytelength of the BitArray is ${ba.view.byteLength}`;
 </script>
 </head>
-<body></body>
+<body>
+</body>
 </html>
