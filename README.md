@@ -19,17 +19,17 @@ BitArray utilizes bit masks to access the bits stored in groups of 8 bytes, know
 
 ### **Installation**
 
-With [Deno](https://deno.land/) you can directly import the `BitArray` package from the [Third Party Modules](https://deno.land/x/bit_array@v2.0.2) like
+With [Deno](https://deno.land/) you can directly import the `BitArray` package from the [Third Party Modules](https://deno.land/x/bit_array@v2.0.3) like
 
 
 ```javascript
-import { BA } from "https://deno.land/x/bit_array@v2.0.2/mod.ts"
+import { BA } from "https://deno.land/x/bit_array@v2.0.3/mod.ts"
 ```
 
-For JS environments like Web browsers from the [`BitArray` GitHub repository](https://github.com/kedicesur/JSBitArray) like
+For JS environments like Web browsers you can directly import the JS compiled version from the [Third Party Modules](https://deno.land/x/bit_array@v2.0.2) like
 
 ```javascript
-import { BA } from "https://raw.githubusercontent.com/kedicesur/JSBitArray/v2.0.2/mod.js"
+import { BA } from "https://deno.land/x/bit_array@v2.0.3/mod.js"
 ```
 
 Working with Node or Bun you can clone the [`BitArray` Repo](https://github.com/kedicesur/JSBitArray) in your project folder and do like 

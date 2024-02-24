@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
 <script type="module">
- import { BA } from "https://raw.githubusercontent.com/kedicesur/JSBitArray/v2.0.2/mod.js";
+import { BA } from "https://deno.land/x/bit_array@v2.0.3/mod.js";
 const ba = new BA(8589934400); //8589934400
 let pc;
     
-ba.wipe(2);
+ba.wipe(2); // fill with randomly set / reset bits
 document.getElementsByTagName("body")[0].textContent = `Population count of BitArray [${ba.toString()}] with size ${ba.length} is ${pc = ba.popcnt()} and the ratio is ${(pc/ba.length*100).toFixed(4)}. The bytelength of the BitArray is ${ba.view.byteLength}`;
 </script>
 </head>
