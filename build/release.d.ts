@@ -1,6 +1,12 @@
 declare namespace __AdaptedExports {
   /** Exported memory */
   export const memory: WebAssembly.Memory;
+  // Exported runtime interface
+  export function __new(size: number, id: number): number;
+  export function __pin(ptr: number): number;
+  export function __unpin(ptr: number): void;
+  export function __collect(): void;
+  export const __rtti_base: number;
   /**
    * assembly/index/__byteLength
    * @param ptr `usize`
